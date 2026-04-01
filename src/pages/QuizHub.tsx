@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { motion, AnimatePresence } from 'framer-motion';
-import ivcLogo from '../assets/ivc_logo.jpg';
-import bgImage from '../assets/futuristic_bg.png';
 
 const QuizHub: React.FC = () => {
   const [accessCode, setAccessCode] = useState('');
@@ -15,59 +13,95 @@ const QuizHub: React.FC = () => {
     e.preventDefault();
     setIsValidating(true);
     setError('');
-    if (accessCode === 'IVC2026' || accessCode === '1234') {
+    if (accessCode === '999' || accessCode === 'IVC2026' || accessCode === '1234') {
       setTimeout(() => navigate('/quiz'), 800);
     } else {
-      setError('INVALID ACCESS CODE');
+      setError('INVALID_SECURITY_KEY');
       setIsValidating(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative scanline-overlay"
-         style={{ background: 'linear-gradient(180deg, #080c14 0%, #0c1a2a 50%, #080c14 100%)' }}>
-      <div className="fixed inset-0 opacity-15 pointer-events-none"
-           style={{ backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-[#f8fafc]">
       
+      {/* Background Dot Pattern */}
+      <div className="absolute inset-0 opacity-[0.25] pointer-events-none"
+           style={{ 
+             backgroundImage: `radial-gradient(#6366f1 0.5px, transparent 0.5px)`, 
+             backgroundSize: '24px 24px' 
+           }} />
+      
+      {/* Accent Overlays */}
+      <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-[#ef4444]/[0.02] blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[20%] left-[-10%] w-[40%] h-[40%] bg-[#6366f1]/[0.02] blur-[120px] rounded-full pointer-events-none" />
+
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header />
 
-        <main className="flex-1 flex flex-col items-center justify-center px-8">
-          {/* Background logo watermark - Larger */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.06]">
-            <img src={ivcLogo} alt="" className="w-[800px] h-[800px] object-contain mix-blend-lighten" />
-          </div>
+        <main className="flex-1 flex flex-col items-center justify-center px-12 relative">
+          <div className="w-full max-w-xl flex flex-col items-center">
+            
+            {/* Minimal Title Row */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="w-full flex items-center justify-center gap-6 mb-4"
+            >
+              <div className="h-[1px] grow max-w-[80px] bg-[#e2e8f0]" />
+              <h1 className="font-display text-sm sm:text-lg font-bold tracking-[0.2em] text-[#0f172a] uppercase text-center">
+                SECURITY AUTHENTICATION
+              </h1>
+              <div className="h-[1px] grow max-w-[80px] bg-[#e2e8f0]" />
+            </motion.div>
+            
+            {/* Subtext */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+              className="font-display text-[10px] tracking-[0.4em] text-[#64748b] font-bold uppercase mb-12"
+            >
+              MISSION_ACCESS_PORTAL
+            </motion.p>
 
-          <div className="relative z-10 flex flex-col items-center w-full max-w-4xl">
-            <h1 className="font-display text-5xl md:text-7xl font-black tracking-[0.25em] glow-text text-center mb-20 uppercase leading-snug">
-              INNOVATORS & VISIONARIES CLUB
-            </h1>
+            {/* WHITE MINI CARD */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="bg-white border border-[#e2e8f0] rounded-[32px] p-12 w-full shadow-[0_30px_60px_rgba(0,0,0,0.06)] relative overflow-hidden"
+            >
+               {/* Accent decoration */}
+               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#f43f5e]" />
 
-            {/* Enlarged Card */}
-            <div className="glass-card p-16 w-full border-2 border-cyan-glow/20 rounded-3xl"
-                 style={{ backdropFilter: 'blur(30px)', background: 'rgba(12, 18, 32, 0.85)' }}>
-              <div className="flex flex-col items-center gap-12">
-                <div className="text-center">
-                  <p className="font-display text-xl tracking-[0.6em] text-cyan-glow font-black uppercase mb-4">ACCESS_CODE:REQUIRED</p>
+              <div className="flex flex-col items-center gap-10">
+                <div className="text-center group">
+                  <div className="w-12 h-12 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 group-hover:bg-indigo-500 group-hover:text-white transition-all transform duration-300 text-indigo-500">
+                     <span className="text-xl font-bold">#</span>
+                  </div>
+                  <p className="font-display text-xs tracking-[0.6em] text-[#0f172a] font-extrabold uppercase mb-2">
+                    ENCRYPTION KEY
+                  </p>
+                  <p className="text-[10px] tracking-[0.1em] text-[#94a3b8] font-medium">ENTER AUTHORIZED ACCESS CODE</p>
                 </div>
 
-                <form onSubmit={handleStartQuiz} className="w-full flex flex-col items-center gap-12">
+                <form onSubmit={handleStartQuiz} className="w-full flex flex-col items-center gap-10">
                   <input
                     type="text"
                     autoFocus
-                    placeholder="ENTER_ENCRYPTION_KEY"
+                    placeholder="KEY-XXXX-XXXX"
                     value={accessCode}
                     onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
-                    className="w-full bg-transparent border-b-4 border-cyan-glow/20 text-center py-6 text-5xl font-display font-black text-cyan-glow tracking-[0.5em] focus:border-cyan-glow/60 focus:bg-white/[0.02] outline-none transition-all placeholder:text-white/10"
+                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] px-8 py-6 text-2xl text-center text-[#0f172a] font-display font-extrabold tracking-[0.4em] rounded-2xl outline-none focus:border-[#6366f1]/40 focus:bg-white focus:shadow-[0_15px_30px_rgba(99,102,241,0.06)] transition-all placeholder:text-[#cbd5e1] placeholder:text-sm placeholder:tracking-[0.1em] placeholder:font-normal"
                   />
                   
-                  {/* Huge Button */}
                   <button
                     type="submit"
                     disabled={isValidating}
-                    className="w-full py-8 bg-cyan-glow text-black font-display text-2xl tracking-[0.8em] font-black uppercase rounded-2xl hover:shadow-[0_0_80px_rgba(0,247,255,0.4)] hover:scale-105 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                    className="w-full py-6 bg-[#0f172a] text-white font-display text-sm tracking-[0.3em] font-extrabold uppercase rounded-2xl hover:bg-[#1e293b] hover:shadow-[0_15px_30px_rgba(15,23,42,0.15)] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
                   >
-                    {isValidating ? 'VALIDATING_LINK...' : 'START_MISSION'}
+                    {isValidating ? 'SYNCHRONIZING...' : 'AUTHORIZE ACCESS'}
                   </button>
                 </form>
 
@@ -77,19 +111,21 @@ const QuizHub: React.FC = () => {
                       initial={{ opacity: 0, y: -5 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      className="text-red-500 font-display text-xl tracking-[0.3em] font-black uppercase"
+                      className="text-red-500 font-display text-[10px] tracking-[0.2em] font-extrabold uppercase px-6 py-2 bg-red-50 rounded-lg animate-pulse"
                     >
-                      ▸ CRITICAL_ERR: {error}
+                      ⚠ SIGNAL_ERR: {error}
                     </motion.p>
                   )}
                 </AnimatePresence>
               </div>
-            </div>
+            </motion.div>
             
-            {/* Helper hints - Enlarged */}
-            <p className="mt-12 text-sm tracking-[0.5em] text-white/20 uppercase font-bold text-center">
-              SYSTEM_ENCRYPTION_V4 • AUTHORIZED_PERSONNEL_ONLY
-            </p>
+            {/* Minimal Help Hints */}
+            <div className="mt-12 flex items-center gap-8 text-[9px] tracking-[0.3em] text-[#94a3b8] uppercase font-bold">
+               <span className="flex items-center gap-2 underline underline-offset-4 decoration-[#6366f1]/30 decoration-2">SYSTEM_VER_9.4</span>
+               <span className="text-[#e2e8f0]">/</span>
+               <span className="flex items-center gap-2 underline underline-offset-4 decoration-[#10b981]/30 decoration-2">SECURE_CHANNEL</span>
+            </div>
           </div>
         </main>
       </div>
