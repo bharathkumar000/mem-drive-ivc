@@ -79,32 +79,35 @@ const AdminDashboard: React.FC = () => {
               {/* QUESTIONS TAB */}
               {activeTab === 'questions' && (
                 <motion.div key="q" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  className="bg-white rounded-[32px] p-12 border border-[#e2e8f0] shadow-[0_30px_60px_rgba(0,0,0,0.05)]"
+                  className="bg-white rounded-[40px] p-16 border border-[#e2e8f0] shadow-[0_60px_120px_rgba(0,0,0,0.06)]"
                 >
-                  <div className="flex justify-between items-center mb-12">
-                    <h2 className="font-display text-2xl font-black tracking-tight text-[#0f172a] uppercase">QUESTION EDITOR</h2>
-                    <button onClick={addQuestion} className="px-8 py-4 bg-[#0f172a] text-white font-display text-xs tracking-widest font-black uppercase rounded-xl flex items-center gap-3 cursor-pointer hover:bg-[#1e293b] hover:shadow-xl transition-all active:scale-95">
-                      <Plus className="w-4 h-4" /> ADD NEW
+                  <div className="flex justify-between items-center mb-16">
+                    <div>
+                      <h2 className="font-display text-4xl font-black tracking-tight text-[#0f172a] uppercase mb-2">QUESTION EDITOR</h2>
+                      <p className="text-[11px] tracking-[0.4em] text-[#94a3b8] font-black uppercase">SYSTEM_DATABASE_MANAGEMENT</p>
+                    </div>
+                    <button onClick={addQuestion} className="px-10 py-6 bg-[#0f172a] text-white font-display text-sm tracking-[0.3em] font-black uppercase rounded-2xl flex items-center gap-4 cursor-pointer hover:bg-[#1e293b] hover:shadow-2xl transition-all active:scale-95">
+                      <Plus className="w-5 h-5" /> ADD NEW PROMPT
                     </button>
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {questions.map(q => (
-                      <div key={q.id} className="bg-[#f8fafc] border border-[#e2e8f0] p-7 rounded-[20px] flex items-center justify-between hover:border-[#3b82f6]/40 transition-all duration-300 group">
-                        <div className="flex items-center gap-6">
-                           <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center font-display font-black text-[#cbd5e1] border border-[#e2e8f0] group-hover:text-[#3b82f6] group-hover:border-[#3b82f6]/20 transition-colors">
+                      <div key={q.id} className="bg-[#f8fafc] border border-[#e2e8f0] p-10 rounded-[32px] flex items-center justify-between hover:border-[#3b82f6]/40 transition-all duration-300 group">
+                        <div className="flex items-center gap-10">
+                           <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center font-display font-black text-[#cbd5e1] border-2 border-[#e2e8f0] group-hover:text-[#3b82f6] group-hover:border-[#3b82f6]/20 transition-all text-xl">
                               {q.id}
                            </div>
                            <div>
-                              <p className="text-[10px] text-[#3b82f6] tracking-[0.2em] uppercase font-black mb-1">DATA_POINT</p>
-                              <p className="text-base text-[#0f172a] font-bold">{q.text || 'New analytical prompt...'}</p>
+                              <p className="text-[11px] text-[#3b82f6] tracking-[0.3em] uppercase font-black mb-2">DATA_POINT_ENTRY</p>
+                              <p className="text-xl text-[#0f172a] font-bold tracking-tight">{q.text || 'Awaiting analytical input...'}</p>
                            </div>
                         </div>
-                        <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
-                          <button onClick={() => reflectToUser(q.id)} className="p-3.5 bg-white border border-[#e2e8f0] rounded-xl text-[#3b82f6] hover:bg-[#3b82f6] hover:text-white hover:border-[#3b82f6] transition-all cursor-pointer shadow-sm" title="Reflect to Users">
-                            <Send className="w-4 h-4" />
+                        <div className="flex gap-4 opacity-50 group-hover:opacity-100 transition-all">
+                          <button onClick={() => reflectToUser(q.id)} className="w-14 h-14 bg-white border border-[#e2e8f0] rounded-2xl text-[#3b82f6] hover:bg-[#3b82f6] hover:text-white hover:border-[#3b82f6] transition-all cursor-pointer shadow-sm flex items-center justify-center">
+                            <Send className="w-5 h-5" />
                           </button>
-                          <button className="p-3.5 bg-white border border-[#e2e8f0] rounded-xl text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all cursor-pointer shadow-sm">
-                            <Trash2 className="w-4 h-4" />
+                          <button className="w-14 h-14 bg-white border border-[#e2e8f0] rounded-2xl text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all cursor-pointer shadow-sm flex items-center justify-center">
+                            <Trash2 className="w-5 h-5" />
                           </button>
                         </div>
                       </div>

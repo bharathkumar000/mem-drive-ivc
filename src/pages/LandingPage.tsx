@@ -74,22 +74,22 @@ const LandingPage: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Clean Glass Action Buttons */}
+           {/* Clean Glass Action Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1, duration: 0.8 }}
-            className="flex flex-col md:flex-row items-center gap-8"
+            className="flex flex-col md:flex-row items-center gap-12"
           >
             <button
               onClick={() => navigate('/quiz-hub')}
-              className="px-20 py-7 bg-[#0f172a] text-white font-display text-sm tracking-[0.3em] font-black uppercase rounded-[24px] hover:bg-[#1e293b] hover:shadow-[0_30px_60px_rgba(15,23,42,0.2)] hover:scale-105 active:scale-[0.97] transition-all cursor-pointer min-w-[320px]"
+              className="px-24 py-10 bg-[#0f172a] text-white font-display text-base tracking-[0.4em] font-black uppercase rounded-[32px] hover:bg-[#1e293b] hover:shadow-[0_40px_80px_rgba(15,23,42,0.25)] hover:scale-105 active:scale-[0.97] transition-all cursor-pointer min-w-[380px]"
             >
               Access Quiz Hub
             </button>
             <button
               onClick={() => navigate('/leaderboard')}
-              className="px-20 py-7 bg-white border border-[#e2e8f0] text-[#0f172a] font-display text-sm tracking-[0.3em] font-black uppercase rounded-[24px] hover:bg-[#f8fafc] hover:border-[#cbd5e1] hover:shadow-[0_15px_30px_rgba(0,0,0,0.04)] hover:scale-105 active:scale-[0.97] transition-all cursor-pointer min-w-[320px]"
+              className="px-24 py-10 bg-white border-2 border-[#e2e8f0] text-[#0f172a] font-display text-base tracking-[0.4em] font-black uppercase rounded-[32px] hover:bg-[#f8fafc] hover:border-[#3b82f6]/40 hover:shadow-[0_20px_40px_rgba(0,0,0,0.05)] hover:scale-105 active:scale-[0.97] transition-all cursor-pointer min-w-[380px]"
             >
               Leaderboard Portal
             </button>
