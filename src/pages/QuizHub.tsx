@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { motion, AnimatePresence } from 'framer-motion';
+import ivcLogo from '../assets/ivc_logo.jpg';
 
 const QuizHub: React.FC = () => {
   const [accessCode, setAccessCode] = useState('');
@@ -38,68 +39,50 @@ const QuizHub: React.FC = () => {
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header />
 
-        <main className="flex-1 flex flex-col items-center justify-center px-12 relative">
-          <div className="w-full max-w-xl flex flex-col items-center">
+        <main className="flex-1 flex flex-col items-center justify-center px-12 relative py-32">
+          <div className="w-full max-w-4xl flex flex-col items-center">
             
-            {/* Minimal Title Row */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="w-full flex items-center justify-center gap-6 mb-4"
-            >
-              <div className="h-[1px] grow max-w-[80px] bg-[#e2e8f0]" />
-              <h1 className="font-display text-sm sm:text-lg font-bold tracking-[0.2em] text-[#0f172a] uppercase text-center">
-                SECURITY AUTHENTICATION
-              </h1>
-              <div className="h-[1px] grow max-w-[80px] bg-[#e2e8f0]" />
-            </motion.div>
-            
-            {/* Subtext */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
-              className="font-display text-[10px] tracking-[0.4em] text-[#64748b] font-bold uppercase mb-12"
-            >
-              MISSION_ACCESS_PORTAL
-            </motion.p>
-
             {/* Access Card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="bg-white border border-[#e2e8f0] rounded-[48px] p-16 w-full shadow-[0_40px_100px_rgba(0,0,0,0.06)] relative overflow-hidden"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+              className="bg-white border border-[#e2e8f0] rounded-[64px] p-24 md:p-32 w-full shadow-[0_80px_200px_rgba(0,0,0,0.1)] relative overflow-hidden"
             >
                {/* Accent decoration */}
-               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#2563eb] via-[#8b5cf6] to-[#f59e0b]" />
+               <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-[#2563eb] via-[#8b5cf6] to-[#f59e0b]" />
 
-              <div className="flex flex-col items-center gap-14">
-                <div className="text-center group">
-                  <div className="w-20 h-20 bg-[#f8fafc] border border-[#e2e8f0] rounded-[24px] flex items-center justify-center mb-8 mx-auto group-hover:scale-110 group-hover:bg-[#2563eb] group-hover:text-white group-hover:border-[#2563eb] transition-all transform duration-500 text-[#2563eb] shadow-sm">
-                     <span className="text-3xl font-black font-display">#</span>
+              <div className="flex flex-col items-center gap-24">
+                {/* LOGO CONTAINER: Centered and Gapped */}
+                <div className="text-center group w-full flex flex-col items-center">
+                  <div className="w-56 h-56 flex items-center justify-center mb-16 transition-transform duration-500 hover:scale-110">
+                     <img 
+                        src={ivcLogo} 
+                        alt="IVC Logo" 
+                        className="w-full h-full object-contain grayscale hover:grayscale-0 transition-all duration-700 shadow-xl" 
+                        style={{ borderRadius: '48px' }}
+                     />
                   </div>
-                  <p className="font-display text-base tracking-[0.6em] text-[#0f172a] font-black uppercase mb-3">
+                  <p className="font-display text-4xl tracking-[0.7em] text-[#0f172a] font-black uppercase mb-6 leading-tight">
                     AUTHORIZATION KEY
                   </p>
-                  <p className="text-[11px] tracking-[0.1em] text-[#94a3b8] font-bold uppercase">SECURED TERMINAL ACCESS REQUIRED</p>
+                  <p className="text-[15px] tracking-[0.3em] text-[#94a3b8] font-black uppercase">SECURED TERMINAL ACCESS REQUIRED</p>
                 </div>
 
-                <form onSubmit={handleStartQuiz} className="w-full flex flex-col items-center gap-12">
+                <form onSubmit={handleStartQuiz} className="w-full flex flex-col items-center gap-24">
                   <input
                     type="text"
                     autoFocus
                     placeholder="KEY-XXXX-XXXX"
                     value={accessCode}
                     onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
-                    className="w-full bg-[#f8fafc] border-2 border-[#e2e8f0] px-10 py-8 text-4xl text-center text-[#0f172a] font-display font-black tracking-[0.3em] rounded-[24px] outline-none focus:border-[#2563eb]/40 focus:bg-white focus:shadow-[0_20px_50px_rgba(37,99,235,0.08)] transition-all duration-500 placeholder:text-[#cbd5e1] placeholder:text-base placeholder:tracking-[0.2em] placeholder:font-bold"
+                    className="w-full bg-[#f8fafc] border-2 border-[#e2e8f0] px-20 py-20 text-7xl text-center text-[#0f172a] font-display font-black tracking-[0.4em] rounded-[48px] outline-none focus:border-[#2563eb]/40 focus:bg-white focus:shadow-[0_60px_100px_rgba(37,99,235,0.12)] transition-all duration-500 placeholder:text-[#cbd5e1] placeholder:text-3xl placeholder:tracking-[0.2em] placeholder:font-black"
                   />
                   
                   <button
                     type="submit"
                     disabled={isValidating}
-                    className="w-full py-8 bg-[#0f172a] text-white font-display text-lg tracking-[0.3em] font-black uppercase rounded-[24px] hover:bg-[#1e293b] hover:shadow-[0_30px_60px_rgba(15,23,42,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 cursor-pointer disabled:opacity-40"
+                    className="w-full py-16 bg-[#0f172a] text-white font-display text-4xl tracking-[0.3em] font-black uppercase rounded-[48px] hover:bg-[#1e293b] hover:shadow-[0_60px_100px_rgba(15,23,42,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 cursor-pointer disabled:opacity-40"
                   >
                     {isValidating ? 'SYNCHRONIZING...' : 'AUTHORIZE ACCESS'}
                   </button>
@@ -111,7 +94,7 @@ const QuizHub: React.FC = () => {
                       initial={{ opacity: 0, y: -5 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      className="text-red-500 font-display text-[10px] tracking-[0.2em] font-extrabold uppercase px-6 py-2 bg-red-50 rounded-lg animate-pulse"
+                      className="text-red-500 font-display text-[16px] tracking-[0.2em] font-black uppercase px-12 py-5 bg-red-50 rounded-2xl animate-pulse"
                     >
                       ⚠ SIGNAL_ERR: {error}
                     </motion.p>
@@ -120,12 +103,6 @@ const QuizHub: React.FC = () => {
               </div>
             </motion.div>
             
-            {/* Minimal Help Hints */}
-            <div className="mt-12 flex items-center gap-8 text-[9px] tracking-[0.3em] text-[#94a3b8] uppercase font-bold">
-               <span className="flex items-center gap-2 underline underline-offset-4 decoration-[#6366f1]/30 decoration-2">SYSTEM_VER_9.4</span>
-               <span className="text-[#e2e8f0]">/</span>
-               <span className="flex items-center gap-2 underline underline-offset-4 decoration-[#10b981]/30 decoration-2">SECURE_CHANNEL</span>
-            </div>
           </div>
         </main>
       </div>
