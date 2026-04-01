@@ -63,10 +63,10 @@ const QuizHub: React.FC = () => {
                         style={{ borderRadius: '48px' }}
                      />
                   </div>
-                  <p className="font-display text-4xl tracking-[0.7em] text-[#0f172a] font-black uppercase mb-6 leading-tight">
+                  <p className="font-display text-4xl tracking-[1.4rem] text-[#0f172a] font-black uppercase mb-0 -mr-[1.4rem] leading-none">
                     AUTHORIZATION KEY
                   </p>
-                  <p className="text-[15px] tracking-[0.3em] text-[#94a3b8] font-black uppercase">SECURED TERMINAL ACCESS REQUIRED</p>
+                  <p className="text-[14px] tracking-[0.4em] text-[#94a3b8] font-black uppercase mt-1">SECURED TERMINAL ACCESS REQUIRED</p>
                 </div>
 
                 <form onSubmit={handleStartQuiz} className="w-full flex flex-col items-center gap-24">
