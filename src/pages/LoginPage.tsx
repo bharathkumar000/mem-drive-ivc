@@ -78,77 +78,77 @@ const LoginPage: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-lg px-6 py-12"
+        transition={{ duration: 1, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-2xl px-6 py-24"
       >
-        <div className="bg-white border border-[#e2e8f0] rounded-[24px] p-10 md:p-14 shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex flex-col items-center">
+        <div className="bg-white border border-[#e2e8f0] rounded-[40px] p-16 md:p-24 shadow-[0_60px_120px_rgba(0,0,0,0.08)] flex flex-col items-center">
           
-          <div className="relative mb-10 group">
+          <div className="relative mb-16 group">
               <img
                 src={ivcLogo}
                 alt="IVC Logo"
-                className="w-32 h-32 object-contain relative z-10 grayscale hover:grayscale-0 transition-all duration-500"
-                style={{ borderRadius: '24px', boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}
+                className="w-48 h-48 object-contain relative z-10 grayscale hover:grayscale-0 transition-all duration-700"
+                style={{ borderRadius: '40px', boxShadow: '0 12px 60px rgba(0,0,0,0.1)' }}
               />
           </div>
 
-          <div className="w-full flex flex-col items-center gap-4 mb-14 text-center">
-              <h1 className="font-display text-4xl font-extrabold tracking-tight text-[#0f172a] uppercase">IVC HUB</h1>
-              <div className="flex items-center gap-6">
-                  <div className="h-[2px] w-20 bg-gradient-to-l from-[#2563eb] to-transparent rounded-full" />
-                  <span className="font-display text-[10px] tracking-[0.5em] text-[#64748b] font-bold uppercase">SECURE PORTAL</span>
-                  <div className="h-[2px] w-20 bg-gradient-to-r from-[#2563eb] to-transparent rounded-full" />
+          <div className="w-full flex flex-col items-center gap-6 mb-20 text-center">
+              <h1 className="font-display text-5xl md:text-6xl font-black tracking-tight text-[#0f172a] uppercase">IVC HUB</h1>
+              <div className="flex items-center gap-10">
+                  <div className="h-[3px] w-24 bg-gradient-to-l from-[#2563eb] to-transparent rounded-full" />
+                  <span className="font-display text-[12px] tracking-[0.5em] text-[#94a3b8] font-black uppercase">SECURE PORTAL</span>
+                  <div className="h-[3px] w-24 bg-gradient-to-r from-[#2563eb] to-transparent rounded-full" />
               </div>
           </div>
 
-          <form onSubmit={handleAuth} className="w-full flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] tracking-[0.3em] text-[#64748b] uppercase font-bold pl-1 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span>
-                Identity
+          <form onSubmit={handleAuth} className="w-full flex flex-col gap-10">
+            <div className="flex flex-col gap-4">
+              <label className="text-[11px] tracking-[0.4em] text-[#64748b] uppercase font-black pl-2 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-[#3b82f6] shadow-[0_4px_12px_rgba(59,130,246,0.3)]"></div>
+                IDENTITY_TOKEN
               </label>
               <input
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#f8fafc] border border-[#e2e8f0] px-6 py-4 text-sm text-[#0f172a] font-medium tracking-wide rounded-xl outline-none focus:border-[#3b82f6]/40 focus:bg-white transition-all placeholder:text-[#94a3b8]"
-                placeholder="Email address"
+                className="w-full bg-[#f8fafc] border-2 border-[#e2e8f0] px-10 py-7 text-lg text-[#0f172a] font-black tracking-tight rounded-[24px] outline-none focus:border-[#3b82f6]/40 focus:bg-white transition-all duration-500 placeholder:text-[#cbd5e1] shadow-inner"
+                placeholder="Access Identity"
               />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] tracking-[0.3em] text-[#64748b] uppercase font-bold pl-1 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>
-                Encryption
+            <div className="flex flex-col gap-4">
+              <label className="text-[11px] tracking-[0.4em] text-[#64748b] uppercase font-black pl-2 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-[#10b981] shadow-[0_4px_12px_rgba(16,185,129,0.3)]"></div>
+                ENCRYPTION_KEY
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#f8fafc] border border-[#e2e8f0] px-6 py-4 text-sm text-[#0f172a] font-medium tracking-wide rounded-xl outline-none focus:border-[#10b981]/40 focus:bg-white transition-all placeholder:text-[#94a3b8]"
-                placeholder="Secret Key"
+                className="w-full bg-[#f8fafc] border-2 border-[#e2e8f0] px-10 py-7 text-lg text-[#0f172a] font-black tracking-tight rounded-[24px] outline-none focus:border-[#10b981]/40 focus:bg-white transition-all duration-500 placeholder:text-[#cbd5e1] shadow-inner"
+                placeholder="Secret Sequence"
               />
             </div>
 
             {error && (
-              <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="text-[#ef4444] font-display text-[11px] tracking-[0.1em] uppercase font-bold text-center py-2 bg-red-50 rounded-lg">
-                ⚠ Access Denied: {error}
+              <motion.p initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-[#ef4444] font-display text-[12px] tracking-[0.2em] uppercase font-black text-center py-4 bg-red-50 rounded-2xl border border-red-100">
+                ⚠ ACCESS_DENIED: {error}
               </motion.p>
             )}
 
-            <div className="flex flex-col gap-5 mt-10 w-full px-4">
-              <button type="submit" disabled={loading} className="w-full py-6 bg-[#0f172a] text-white font-display text-base tracking-[0.2em] font-extrabold uppercase rounded-2xl hover:bg-[#1e293b] hover:shadow-[0_20px_40px_rgba(15,23,42,0.15)] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center">
-                {loading ? 'Processing...' : 'Authorize Session'}
+            <div className="flex flex-col gap-8 mt-12 w-full px-4">
+              <button type="submit" disabled={loading} className="w-full py-10 bg-[#0f172a] text-white font-display text-xl tracking-[0.3em] font-black uppercase rounded-[28px] hover:bg-[#1e293b] hover:shadow-[0_40px_80px_rgba(15,23,42,0.2)] active:scale-[0.98] transition-all duration-500 cursor-pointer disabled:opacity-50 flex items-center justify-center">
+                {loading ? 'SYNCHRONIZING...' : 'AUTHORIZE SESSION'}
               </button>
-              <button onClick={handleGoogleLogin} type="button" disabled={loading} className="w-full py-6 bg-white border border-[#e2e8f0] rounded-2xl flex items-center justify-center gap-5 hover:bg-[#f8fafc] hover:border-[#cbd5e1] active:scale-[0.98] transition-all cursor-pointer group shadow-sm">
-                <img src="https://www.google.com/favicon.ico" alt="" className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-[#64748b] group-hover:text-[#0f172a] font-display text-sm tracking-[0.1em] font-bold uppercase transition-colors">Sign in with Google</span>
+              <button onClick={handleGoogleLogin} type="button" disabled={loading} className="w-full py-10 bg-white border-2 border-[#e2e8f0] rounded-[28px] flex items-center justify-center gap-6 hover:bg-[#f8fafc] hover:border-[#3b82f6]/40 active:scale-[0.98] transition-all duration-500 cursor-pointer group shadow-sm">
+                <img src="https://www.google.com/favicon.ico" alt="" className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                <span className="text-[#64748b] group-hover:text-[#0f172a] font-display text-base tracking-[0.2em] font-black uppercase transition-colors">Sign in with Google</span>
               </button>
             </div>
           </form>
 
-          <footer className="mt-12 pt-8 border-t border-[#f1f5f9] w-full text-center">
-             <p className="text-[10px] tracking-[0.2em] text-[#94a3b8] uppercase font-medium">Innovators & Visionaries Club</p>
+          <footer className="mt-20 pt-10 border-t border-[#f1f5f9] w-full text-center">
+             <p className="text-[11px] tracking-[0.4em] text-[#94a3b8] font-black uppercase">IVC SECURITY PROTOCOL ACTIVE</p>
           </footer>
         </div>
       </motion.div>
