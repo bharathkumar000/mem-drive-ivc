@@ -37,7 +37,7 @@ const QuizPage: React.FC = () => {
         .from('questions')
         .select('*')
         .eq('is_active', true);
-      if (data) {
+      if (data && data.length > 0) {
         setQuestions(data);
         setTimeLeft(data[0]?.timer_limit || 60);
       }
@@ -58,7 +58,7 @@ const QuizPage: React.FC = () => {
   useAntiCheating({ onViolation: handleViolation, violations });
 
   useEffect(() => {
-    if (quizEnded) return;
+    if (quizEnded || !currentQ) return;
     setTimeLeft(currentQ.timer_limit);
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
@@ -68,9 +68,10 @@ const QuizPage: React.FC = () => {
       });
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [currentIdx]);
+  }, [currentIdx, questions]);
 
   const handleSubmit = async () => {
+    if (!currentQ) return;
     const points = Math.max(0, Math.floor(100 * (timeLeft / currentQ.timer_limit)));
     
     // Log response to Supabase
@@ -104,6 +105,24 @@ const QuizPage: React.FC = () => {
       return arr.includes(opt) ? arr.filter(i => i !== opt) : [...arr, opt];
     });
   };
+
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] font-display">
+         <motion.div 
+           initial={{ opacity: 0, scale: 0.9 }}
+           animate={{ opacity: 1, scale: 1 }}
+           className="flex flex-col items-center gap-10"
+         >
+            <div className="w-32 h-32 border-4 border-[#3b82f6]/20 border-t-[#3b82f6] rounded-full animate-spin" />
+            <div className="text-center">
+              <h2 className="text-3xl font-black text-[#0f172a] tracking-[0.2em] mb-4">SYNCHRONIZING SESSION</h2>
+              <p className="text-[#94a3b8] font-bold tracking-[0.4em] text-xs uppercase">Connecting to secure terminal...</p>
+            </div>
+         </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col relative no-select bg-[#f8fafc]">
