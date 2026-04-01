@@ -47,33 +47,36 @@ const LeaderboardPage: React.FC = () => {
              backgroundImage: `radial-gradient(#3b82f6 0.5px, transparent 0.5px)`, 
              backgroundSize: '32px 32px' 
            }} />
+      {/* Subtle Dot Pattern */}
+      <div className="absolute inset-0 opacity-[0.25] pointer-events-none"
+           style={{ 
+             backgroundImage: `radial-gradient(#3b82f6 0.5px, transparent 0.5px)`, 
+             backgroundSize: '32px 32px' 
+           }} />
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header />
-
-        <div className="flex justify-center mt-6">
-          <div className="bg-white border border-[#e2e8f0] rounded-full px-5 py-2 flex items-center gap-5 shadow-sm">
-            <a href="/" className="text-[10px] tracking-[0.3em] text-[#64748b] font-bold uppercase hover:text-[#3b82f6] transition-colors">Home</a>
-            <a href="#" className="text-[10px] tracking-[0.3em] text-[#64748b] font-bold uppercase hover:text-[#3b82f6] transition-colors">About</a>
-            <a href="#" className="text-[10px] tracking-[0.3em] text-[#3b82f6] font-bold uppercase border-t-2 border-[#3b82f6] pt-1 -mt-1">Achievements</a>
-          </div>
-        </div>
-
-        <main className="flex-1 flex flex-col items-center px-8 pt-16">
+        <main className="flex-1 flex flex-col items-center px-12 pt-16">
           <div className="w-full max-w-4xl">
-            <div className="flex flex-col items-center mb-14">
-              <Trophy className="w-12 h-12 text-[#3b82f6] mb-4" />
-              <h1 className="font-display text-4xl md:text-5xl font-black tracking-[0.1em] text-[#0f172a] uppercase mb-2">LEADERBOARD</h1>
-              <p className="text-[10px] tracking-[0.4em] text-[#94a3b8] uppercase font-bold">REAL-TIME RANKING • SYSTEM SYNC: LIVE</p>
+            {/* Title Section */}
+            <div className="flex flex-col items-center mb-20">
+              <Trophy className="w-16 h-16 text-[#3b82f6] mb-6" />
+              <h1 className="font-display text-5xl md:text-6xl font-black tracking-tight text-[#0f172a] uppercase mb-4 text-center">LEADERBOARD</h1>
+              <div className="flex items-center gap-6">
+                <div className="h-[2px] w-12 bg-[#3b82f6]/20" />
+                <p className="text-[12px] tracking-[0.5em] text-[#94a3b8] uppercase font-black">REAL-TIME RANKING</p>
+                <div className="h-[2px] w-12 bg-[#3b82f6]/20" />
+              </div>
             </div>
-
-            <div className="bg-white rounded-3xl overflow-hidden border border-[#e2e8f0] shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
-              <div className="flex px-10 py-6 border-b border-[#f1f5f9] bg-[#f8fafc]">
-                <div className="w-20 font-display text-[9px] tracking-[0.3em] text-[#94a3b8] uppercase font-bold"># RANK</div>
-                <div className="flex-1 font-display text-[9px] tracking-[0.3em] text-[#94a3b8] uppercase font-bold flex items-center gap-2">
-                  <User className="w-3 h-3" /> PARTICIPANT
+            
+            <div className="bg-white rounded-[40px] overflow-hidden border border-[#e2e8f0] shadow-[0_40px_100px_rgba(0,0,0,0.06)]">
+              {/* Table Header */}
+              <div className="flex px-12 py-8 border-b border-[#f1f5f9] bg-[#f8fafc]">
+                <div className="w-24 font-display text-[10px] tracking-[0.3em] text-[#94a3b8] uppercase font-black"># RANK</div>
+                <div className="flex-1 font-display text-[10px] tracking-[0.3em] text-[#94a3b8] uppercase font-black flex items-center gap-3">
+                  <User className="w-3.5 h-3.5" /> PARTICIPANT
                 </div>
-                <div className="w-32 text-right font-display text-[9px] tracking-[0.3em] text-[#94a3b8] uppercase font-bold flex items-center justify-end gap-2">
-                  <Zap className="w-3 h-3" /> SCORE
+                <div className="w-40 text-right font-display text-[10px] tracking-[0.3em] text-[#94a3b8] uppercase font-black flex items-center justify-end gap-3">
+                  <Zap className="w-3.5 h-3.5" /> SCORE
                 </div>
               </div>
 
