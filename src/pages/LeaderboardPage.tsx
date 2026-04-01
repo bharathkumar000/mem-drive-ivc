@@ -42,17 +42,13 @@ const LeaderboardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative bg-[#f8fafc]">
-      <div className="absolute inset-0 opacity-[0.2] pointer-events-none"
-           style={{ 
-             backgroundImage: `radial-gradient(#3b82f6 0.5px, transparent 0.5px)`, 
-             backgroundSize: '32px 32px' 
-           }} />
-      {/* Subtle Dot Pattern */}
+      {/* Universal Background Pattern */}
       <div className="absolute inset-0 opacity-[0.25] pointer-events-none"
            style={{ 
              backgroundImage: `radial-gradient(#3b82f6 0.5px, transparent 0.5px)`, 
              backgroundSize: '32px 32px' 
            }} />
+      
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header />
         <main className="flex-1 flex flex-col items-center px-12 pt-16">
