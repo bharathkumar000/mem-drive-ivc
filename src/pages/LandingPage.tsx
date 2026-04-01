@@ -47,10 +47,10 @@ const LandingPage: React.FC = () => {
             className="w-full flex items-center justify-center gap-8 mb-4 max-w-4xl"
           >
             <div className="h-[1px] grow max-w-[150px] bg-gradient-to-l from-[#3b82f6]/40 to-transparent" />
-            <h1 className="font-display text-sm sm:text-lg md:text-xl lg:text-3xl font-extrabold tracking-[0.25em] text-[#0f172a] uppercase text-center">
-              INNOVATORS & VISIONARIES <span className="text-[#3b82f6]">CLUB</span>
+            <h1 className="font-display text-sm sm:text-xl md:text-2xl lg:text-5xl font-black tracking-tight text-[#0f172a] uppercase text-center">
+              INNOVATORS & VISIONARIES <span className="text-[#2563eb]">CLUB</span>
             </h1>
-            <div className="h-[1px] grow max-w-[150px] bg-gradient-to-r from-[#3b82f6]/40 to-transparent" />
+            <div className="h-[2px] grow max-w-[150px] bg-gradient-to-r from-[#2563eb]/40 to-transparent" />
           </motion.div>
 
           {/* Minimalist Multi-Colored Dots for Tagline */}
@@ -58,19 +58,19 @@ const LandingPage: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 1 }}
-            className="flex items-center gap-8 mb-20"
+            className="flex items-center gap-10 mb-24"
           >
-            <div className="flex items-center gap-3">
-              <span className="font-display text-[10px] tracking-[0.5em] text-[#64748b] font-bold uppercase">IDEATE</span>
-              <div className="w-1.5 h-1.5 bg-[#3b82f6] rounded-full" />
+            <div className="flex items-center gap-4">
+              <span className="font-display text-[11px] tracking-[0.5em] text-[#64748b] font-black uppercase">IDEATE</span>
+              <div className="w-2 h-2 bg-[#2563eb] rounded-full shadow-[0_4px_12px_rgba(37,99,235,0.3)]" />
             </div>
-            <div className="flex items-center gap-3">
-              <span className="font-display text-[10px] tracking-[0.5em] text-[#64748b] font-bold uppercase">VISUALIZE</span>
-              <div className="w-1.5 h-1.5 bg-[#10b981] rounded-full" />
+            <div className="flex items-center gap-4">
+              <span className="font-display text-[11px] tracking-[0.5em] text-[#64748b] font-black uppercase">VISUALIZE</span>
+              <div className="w-2 h-2 bg-[#10b981] rounded-full shadow-[0_4px_12px_rgba(16,185,129,0.3)]" />
             </div>
-            <div className="flex items-center gap-3">
-              <span className="font-display text-[10px] tracking-[0.5em] text-[#64748b] font-bold uppercase">CREATE</span>
-              <div className="w-1.5 h-1.5 bg-[#f59e0b] rounded-full" />
+            <div className="flex items-center gap-4">
+              <span className="font-display text-[11px] tracking-[0.5em] text-[#64748b] font-black uppercase">CREATE</span>
+              <div className="w-2 h-2 bg-[#f59e0b] rounded-full shadow-[0_4px_12px_rgba(245,158,11,0.3)]" />
             </div>
           </motion.div>
 
@@ -79,17 +79,17 @@ const LandingPage: React.FC = () => {
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1, duration: 0.8 }}
-            className="flex flex-col md:flex-row items-center gap-6"
+            className="flex flex-col md:flex-row items-center gap-8"
           >
             <button
               onClick={() => navigate('/quiz-hub')}
-              className="px-16 py-5 bg-[#0f172a] text-white font-display text-xs tracking-[0.3em] font-extrabold uppercase rounded-2xl hover:bg-[#1e293b] hover:shadow-[0_15px_30px_rgba(15,23,42,0.1)] active:scale-[0.98] transition-all cursor-pointer min-w-[280px]"
+              className="px-20 py-7 bg-[#0f172a] text-white font-display text-sm tracking-[0.3em] font-black uppercase rounded-[24px] hover:bg-[#1e293b] hover:shadow-[0_30px_60px_rgba(15,23,42,0.2)] hover:scale-105 active:scale-[0.97] transition-all cursor-pointer min-w-[320px]"
             >
               Access Quiz Hub
             </button>
             <button
               onClick={() => navigate('/leaderboard')}
-              className="px-16 py-5 bg-white border border-[#e2e8f0] text-[#0f172a] font-display text-xs tracking-[0.3em] font-extrabold uppercase rounded-2xl hover:bg-[#f8fafc] hover:shadow-[0_10px_20px_rgba(0,0,0,0.03)] active:scale-[0.98] transition-all cursor-pointer min-w-[280px]"
+              className="px-20 py-7 bg-white border border-[#e2e8f0] text-[#0f172a] font-display text-sm tracking-[0.3em] font-black uppercase rounded-[24px] hover:bg-[#f8fafc] hover:border-[#cbd5e1] hover:shadow-[0_15px_30px_rgba(0,0,0,0.04)] hover:scale-105 active:scale-[0.97] transition-all cursor-pointer min-w-[320px]"
             >
               Leaderboard Portal
             </button>
