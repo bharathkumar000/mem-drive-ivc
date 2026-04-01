@@ -23,6 +23,16 @@ const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
+      // 1/1 and 2/2 testing bypass
+      if (email === '1' && password === '1') {
+        navigate('/quiz-hub');
+        return;
+      }
+      if (email === '2' && password === '2') {
+        navigate('/admin');
+        return;
+      }
+
       const { data, error: sbErr } = await supabase.auth.signInWithPassword({ email, password });
       if (sbErr) throw sbErr;
 
