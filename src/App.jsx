@@ -6,11 +6,11 @@ import QuizHub from './pages/QuizHub';
 import QuizPage from './pages/QuizPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import AdminDashboard from './pages/AdminDashboard';
-import { supabase } from './supabase';
-import './index.css';
+import { supabase } from './lib/supabase';
+import './styles/index.css';
 
-const ProtectedRoute: React.FC<{ children: React.ReactElement; adminOnly?: boolean }> = ({ children, adminOnly }) => {
-  const [user, setUser] = useState<any>(null);
+const ProtectedRoute = ({ children, adminOnly }) => {
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
