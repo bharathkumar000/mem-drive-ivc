@@ -75,7 +75,7 @@ export function useAntiCheat(quizId, isEnabled = true) {
         // E.g., submitQuiz({ flagged: true, reason });
         alert("Quiz automatically submitted due to multiple violations.");
       } else {
-        showToast(\`Warning! You have left the quiz area. (\${nextWarnings}/\${maxWarnings})\`);
+        showToast(`Warning! You have left the quiz area. (${nextWarnings}/${maxWarnings})`);
       }
       
       return nextWarnings;
