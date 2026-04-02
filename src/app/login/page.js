@@ -46,7 +46,7 @@ export default function LoginPage() {
 
     if (email === "1234" || password === "1234" || email === "1" || password === "1") {
       document.cookie = "mock_session=user; path=/";
-      router.push("/authorization");
+      router.push("/dashboard");
       return;
     }
     
@@ -66,7 +66,7 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push("/authorization");
+      router.push("/dashboard");
     }
   };
 

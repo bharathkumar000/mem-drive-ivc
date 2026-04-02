@@ -17,7 +17,7 @@ import {
   ChevronDown
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -36,15 +36,15 @@ export default function DashboardPage() {
   const isAdmin = role === "admin";
 
   const sidebarItems = isAdmin ? [
-    { name: "Home", icon: BarChart3 },
-    { name: "Protocols", icon: BookText },
-    { name: "Candidates", icon: Users2 },
-    { name: "Reports", icon: FileBox },
+    { name: "Home", icon: LayoutDashboard, path: "/dashboard" },
+    { name: "Protocols", icon: BookText, path: "/quiz" },
+    { name: "Candidates", icon: Users2, path: "/dashboard/candidates" },
+    { name: "Reports", icon: FileBox, path: "/dashboard/reports" },
   ] : [
-    { name: "Home", icon: BarChart3 },
-    { name: "Assessments", icon: BookText },
-    { name: "Archive", icon: Shield },
-    { name: "Feedback", icon: FileText },
+    { name: "Home", icon: LayoutDashboard, path: "/dashboard" },
+    { name: "Assessments", icon: BookText, path: "/quiz" },
+    { name: "Archive", icon: Shield, path: "/dashboard/archive" },
+    { name: "Feedback", icon: FileText, path: "/dashboard/feedback" },
   ];
 
   const stats = [
@@ -63,12 +63,8 @@ export default function DashboardPage() {
     router.push("/quiz");
   };
 
-  const handleSidebarClick = (name) => {
-    if (name === "Protocols" || name === "Assessments") {
-      router.push("/quiz");
-    } else {
-      setActiveTab(name);
-    }
+  const handleSidebarClick = (name, path) => {
+    router.push(path);
   };
 
   return (
@@ -91,7 +87,7 @@ export default function DashboardPage() {
           {sidebarItems.map((item) => (
             <button
               key={item.name}
-              onClick={() => handleSidebarClick(item.name)}
+              onClick={() => handleSidebarClick(item.name, item.path)}
               className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 ${
                 activeTab === item.name 
                   ? "bg-[#2563EB] text-white shadow-xl shadow-blue-100" 
@@ -104,13 +100,15 @@ export default function DashboardPage() {
           ))}
         </nav>
 
-        <div className="p-4 mt-auto border-t border-[#E2E8F0]">
+        <div className="p-4 mt-auto">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-[#64748B] hover:bg-red-50 hover:text-red-500 transition-all group"
+            className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl bg-[#FFF1F2] text-[#E11D48] hover:bg-[#FFE4E6] transition-all group border border-[#FECDD3]"
           >
-            <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="text-xs font-black uppercase tracking-widest leading-none">Logout Protocol</span>
+            <div className="w-10 h-10 bg-[#0F172A] rounded-full flex items-center justify-center text-white font-black text-xs shrink-0">
+              N
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-widest leading-none">Logout Protocol</span>
           </button>
         </div>
       </aside>
@@ -122,7 +120,9 @@ export default function DashboardPage() {
             <h2 className="text-4xl font-extrabold text-[#0F172A] tracking-tighter flex items-center gap-3">
               CONTROL <span className="text-[#2563EB]">CENTER</span>
             </h2>
-            <p className="text-sm font-bold text-[#64748B] tracking-tight">Authorized access: Administrator</p>
+            <p className="text-sm font-bold text-[#64748B] tracking-tight">
+              Authorized access: {isAdmin ? "Administrator" : "Candidate"}
+            </p>
           </div>
 
           <button 
