@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, Zap, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
+import { Lock, Zap, ArrowRight, Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function QuizAuthorization() {
@@ -30,6 +30,17 @@ export default function QuizAuthorization() {
 
   return (
     <div className="min-h-[100dvh] w-full bg-[#f4f6f8] flex items-center justify-center p-4 font-sans text-black relative overflow-hidden">
+      {/* Back Button */}
+      <motion.button
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        onClick={() => router.push("/dashboard")}
+        className="absolute top-10 left-10 flex items-center gap-2 px-5 py-2.5 bg-white/50 backdrop-blur-md rounded-xl border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-white transition-all shadow-sm group z-50"
+      >
+        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+        <span className="text-[11px] font-black uppercase tracking-widest leading-none">Exit Protocol</span>
+      </motion.button>
+
       {/* Subtle Background Elements */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#2563EB]/5 rounded-full blur-[100px]" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#4F46E5]/5 rounded-full blur-[100px]" />
