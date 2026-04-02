@@ -125,13 +125,15 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <button 
-            onClick={handleInitialize}
-            className="bg-[#2563EB] text-white px-8 py-5 rounded-2xl font-black text-xs tracking-widest uppercase flex items-center gap-3 shadow-[0_12px_24px_rgba(37,99,235,0.25)] hover:bg-[#1E40AF] transition-all active:scale-[0.98] group"
-          >
-            <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
-            <span>Initialize Protocol</span>
-          </button>
+          {isAdmin && (
+            <button 
+              onClick={handleInitialize}
+              className="bg-[#2563EB] text-white px-8 py-5 rounded-2xl font-black text-xs tracking-widest uppercase flex items-center gap-3 shadow-[0_12px_24px_rgba(37,99,235,0.25)] hover:bg-[#1E40AF] transition-all active:scale-[0.98] group"
+            >
+              <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+              <span>Initialize Protocol</span>
+            </button>
+          )}
         </header>
 
         {/* Stats Grid */}
@@ -153,20 +155,22 @@ export default function DashboardPage() {
                   <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.2em]">{stat.title}</p>
                 </div>
               </div>
-              {/* Decorative Circle */}
               <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-[40px] opacity-10 -mr-8 -mt-8 ${stat.color.replace('text-', 'bg-')}`} />
             </motion.div>
           ))}
         </div>
 
-        {/* Overview Chart/Area */}
+        {/* Improved Overview Area */}
         <div className="flex-1 bg-white rounded-[40px] border border-[#E2E8F0] shadow-sm overflow-hidden flex flex-col p-10">
           <div className="flex items-center justify-between mb-12">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-[#F1F5F9] rounded-xl flex items-center justify-center border border-[#E2E8F0]">
                 <Activity className="text-[#2563EB] w-5 h-5" />
               </div>
-              <h3 className="text-lg font-black uppercase tracking-widest text-[#0F172A]">Active Node Overview</h3>
+              <div>
+                <h3 className="text-lg font-black uppercase tracking-widest text-[#0F172A]">Active Node Overview</h3>
+                <p className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest">Real-time Station Status</p>
+              </div>
             </div>
             
             <div className="flex items-center gap-1 p-1 bg-[#F1F5F9] rounded-xl border border-[#E2E8F0]">
@@ -175,21 +179,81 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col items-center justify-center opacity-40">
-            <BookText size={64} className="text-[#94A3B8] mb-6 animate-pulse" />
-            <h4 className="text-lg font-black uppercase tracking-widest text-[#0F172A] mb-2">Protocol Hub Empty</h4>
-            <p className="text-sm font-bold text-[#64748B] max-w-[320px] text-center leading-relaxed">
-              No protocols have been initialized. Click the button above to start.
-            </p>
-          </div>
-          
-          <div className="h-1 bg-[#F1F5F9] rounded-full overflow-hidden mt-8">
-            <motion.div 
-              className="h-full bg-[#2563EB]"
-              initial={{ width: 0 }}
-              animate={{ width: "30%" }}
-              transition={{ duration: 2, repeat: Infinity, repeatType: "mirror" }}
-            />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 flex-1">
+            {/* Station Health */}
+            <div className="lg:col-span-1 space-y-6">
+              <div className="bg-[#F8FAFC] p-8 rounded-[32px] border border-[#F1F5F9] space-y-6">
+                 <h4 className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.2em]">Neural Sync Status</h4>
+                 <div className="space-y-5">
+                    {[
+                      { label: "Core Uplink", status: "Operational", color: "bg-green-500" },
+                      { label: "AI Evaluator", status: "Synced", color: "bg-green-500" },
+                      { label: "Network Latency", status: "24ms", color: "bg-blue-500" }
+                    ].map((s, i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-[#64748B]">{s.label}</span>
+                        <div className="flex items-center gap-2">
+                           <div className={`w-1.5 h-1.5 rounded-full ${s.color}`} />
+                           <span className="text-[10px] font-black text-[#0F172A] uppercase tracking-wider">{s.status}</span>
+                        </div>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+              
+              <div className="bg-[#2563EB] p-8 rounded-[32px] text-white overflow-hidden relative group">
+                 <div className="relative z-10">
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-2">Build Version</p>
+                    <h4 className="text-2xl font-black mb-2 tracking-tighter">NEXUS v2.4</h4>
+                    <p className="text-xs font-medium text-white/60 leading-relaxed italic">"Industry standard validation framework."</p>
+                 </div>
+                 <Shield size={100} className="absolute -bottom-6 -right-6 text-white/10 group-hover:scale-110 transition-transform" />
+              </div>
+            </div>
+
+            {/* Assessment Hub */}
+            <div className="lg:col-span-2">
+               <div className="flex items-center justify-between mb-8">
+                  <h4 className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.2em]">Pending Assignments</h4>
+                  <span className="bg-blue-50 text-[#2563EB] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">02 New</span>
+               </div>
+               
+               <div className="space-y-4">
+                  {[
+                    { id: "A-42", title: "Technical Component Analysis", time: "45m", diff: "Expert" },
+                    { id: "B-12", title: "Edge Security Optimization", time: "30m", diff: "High" }
+                  ].map((a, i) => (
+                    <motion.div 
+                      key={i} 
+                      whileHover={{ x: 8 }}
+                      className="group cursor-pointer bg-white border border-[#F1F5F9] hover:border-[#2563EB] p-6 rounded-[28px] flex items-center justify-between transition-all hover:shadow-xl hover:shadow-blue-50"
+                    >
+                      <div className="flex items-center gap-6">
+                        <div className="w-12 h-12 rounded-2xl bg-[#F8FAFC] group-hover:bg-blue-50 flex items-center justify-center text-[#94A3B8] group-hover:text-[#2563EB] transition-colors">
+                          <BookText size={20} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest leading-none mb-1">ID: {a.id}</p>
+                          <h5 className="font-bold text-[#0F172A]">{a.title}</h5>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-8">
+                         <div className="text-right hidden sm:block">
+                            <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest leading-none mb-1">Duration</p>
+                            <p className="text-xs font-bold text-[#0F172A]">{a.time}</p>
+                         </div>
+                         <button onClick={() => router.push('/quiz')} className="bg-[#F8FAFC] group-hover:bg-[#2563EB] group-hover:text-white p-3 rounded-xl transition-colors">
+                            <ArrowRight size={18} />
+                         </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                  
+                  <button className="w-full py-5 border-2 border-dashed border-[#E2E8F0] rounded-[28px] text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.2em] hover:text-[#2563EB] hover:border-[#2563EB] transition-all">
+                    View Archive Protocol Statistics
+                  </button>
+               </div>
+            </div>
           </div>
         </div>
       </main>
