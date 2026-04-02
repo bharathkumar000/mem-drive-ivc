@@ -59,9 +59,14 @@ export async function middleware(request) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Redirect to root if already authenticated and trying to access login
+  // Redirect to root-to-quiz if authenticated and at the root portal
+  if (isAuthenticated && path === "/") {
+    return NextResponse.redirect(new URL("/quiz", request.url));
+  }
+
+  // Redirect to root (which now goes to quiz) if already authenticated and trying to access login
   if (isAuthenticated && isLoginRoute) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/quiz", request.url));
   }
 
   // Admin access control

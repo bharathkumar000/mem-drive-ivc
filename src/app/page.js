@@ -8,9 +8,14 @@ import {
   Zap, 
   User, 
   LogOut, 
-  Settings, 
+  Lock,
+  Activity,
+  History,
   Trophy,
-  ChevronDown
+  LayoutDashboard,
+  Cpu,
+  Mail,
+  Smartphone
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -20,7 +25,7 @@ export default function LandingPortal() {
   const supabase = createClient();
   const router = useRouter();
   const [user, setUser] = useState(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSignOutLoading, setIsSignOutLoading] = useState(false);
 
   useEffect(() => {
     async function getUser() {
@@ -31,136 +36,138 @@ export default function LandingPortal() {
   }, []);
 
   const handleSignOut = async () => {
+    setIsSignOutLoading(true);
+    // Force clear all auth cookies for both mock and live sessions
+    document.cookie = "mock_session=; path=/; max-age=0;";
+    document.cookie = "mock_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+    
     await supabase.auth.signOut();
-    router.refresh();
-    router.push("/login");
+    
+    // Immediate hard redirect to ensure state clear
+    window.location.href = "/login";
   };
 
   return (
-    <div className="min-h-screen bg-page-bg flex flex-col items-center justify-center p-6 font-sans">
-      {/* Profile Dropdown */}
-      <div className="absolute top-6 right-6">
-        <div className="relative">
-          <button 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="flex items-center gap-3 pl-2 pr-4 py-2 bg-white border border-card-border rounded-pill shadow-subtle hover:border-primary-blue transition-all group"
-          >
-            <div className="w-8 h-8 rounded-full bg-primary-blue flex items-center justify-center text-white text-xs font-bold ring-2 ring-white shadow-sm">
-              {user?.email?.[0].toUpperCase() || <User size={14} />}
-            </div>
-            <div className="text-left hidden sm:block">
-              <p className="text-[11px] font-bold text-text-primary leading-tight truncate max-w-[120px]">
-                {user?.email?.split('@')[0] || "User"}
-              </p>
-              <p className="text-[9px] text-text-meta uppercase tracking-widest font-black">Authorized</p>
-            </div>
-            <ChevronDown size={14} className={`text-text-meta transition-transform duration-300 ${isMenuOpen ? 'rotate-180' : ''}`} />
-          </button>
-
-          <AnimatePresence>
-            {isMenuOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute right-0 mt-3 w-56 bg-white border border-card-border rounded-inner shadow-xl z-50 p-2 overflow-hidden"
-              >
-                <div className="px-4 py-3 border-b border-card-border mb-2">
-                  <p className="text-[10px] text-text-meta font-black uppercase tracking-widest mb-1">Signed in as</p>
-                  <p className="text-xs font-bold text-text-primary truncate">{user?.email}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <Link 
-                    href="/quiz/profile"
-                    className="flex items-center gap-3 px-4 py-2 text-xs font-bold text-text-secondary hover:bg-nav-hover hover:text-primary-blue rounded-pill transition-all group"
-                  >
-                    <User size={14} />
-                    <span>View Profile</span>
-                  </Link>
-                  <Link 
-                    href="/quiz/leaderboard"
-                    className="flex items-center gap-3 px-4 py-2 text-xs font-bold text-text-secondary hover:bg-nav-hover hover:text-primary-blue rounded-pill transition-all group"
-                  >
-                    <Trophy size={14} />
-                    <span>Leaderboard</span>
-                  </Link>
-                  <Link 
-                    href="/quiz/settings"
-                    className="flex items-center gap-3 px-4 py-2 text-xs font-bold text-text-secondary hover:bg-nav-hover hover:text-primary-blue rounded-pill transition-all group"
-                  >
-                    <Settings size={14} />
-                    <span>Preferences</span>
-                  </Link>
-                </div>
-
-                <div className="h-px bg-card-border my-2" />
-
-                <button 
-                  onClick={handleSignOut}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-pill transition-all mb-1"
-                >
-                  <LogOut size={14} />
-                  <span>Sign Out</span>
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Main Card */}
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-lg bg-card-bg border border-card-border rounded-card shadow-subtle p-12 space-y-10 text-center"
+    <div className="min-h-[100dvh] w-full bg-[#F8FAFC] flex items-center justify-center p-6 relative overflow-hidden font-sans text-black">
+      {/* Subtle Background Effects */}
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary-blue/5 rounded-full blur-[120px] pointer-events-none" />
+      
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-[500px] bg-white rounded-[40px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] border border-[#E2E8F0] relative z-10 overflow-hidden"
       >
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 bg-primary-blue rounded-2xl flex items-center justify-center shadow-[0_4px_12px_rgba(37,99,235,0.2)] ring-4 ring-white">
-            <ShieldCheck className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">Skill Forge Portal</h1>
-            <div className="flex items-center justify-center gap-2 mt-2">
-              <span className="w-1.5 h-1.5 bg-success-green rounded-full animate-pulse" />
-              <p className="text-meta">Innovators & Visionaries Club</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="h-px bg-card-border w-full" />
-
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-text-primary">Authorize Session</h2>
-          </div>
-
-          <div className="space-y-4">
+        {/* Top Branding Strip */}
+        <div className="bg-primary-blue h-2 w-full" />
+        
+        <div className="p-8 md:p-12 space-y-8">
+          {/* Header & User Info */}
+          <div className="flex flex-col items-center text-center space-y-6">
             <div className="relative group">
-              <input 
-                type="text" 
-                placeholder="ENTER ACCESS CODE" 
-                className="w-full bg-nav-hover border border-card-border rounded-inner px-6 py-4 text-center font-black tracking-widest text-lg placeholder:text-text-meta uppercase focus:outline-none focus:ring-2 focus:ring-primary-blue/30 focus:border-primary-blue transition-all text-black"
-              />
+              <div className="w-20 h-20 bg-[#F1F5F9] rounded-[24px] border-2 border-[#E2E8F0] flex items-center justify-center text-primary-blue shadow-sm group-hover:border-primary-blue transition-all">
+                {user?.email?.[0].toUpperCase() || <User size={32} className="stroke-[1.5]" />}
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#10B981] border-4 border-white rounded-full animate-pulse shadow-sm" />
             </div>
-            <button className="w-full bg-primary-blue text-white py-4 rounded-inner font-bold text-sm tracking-widest uppercase hover:bg-deep-indigo transition-all flex items-center justify-center gap-3 shadow-[0_4px_12px_rgba(37,99,235,0.2)] active:scale-[0.98]">
-              <span>Begin Quiz Attempt</span>
-              <ArrowRight size={18} />
+            
+            <div className="space-y-1">
+              <h1 className="text-3xl font-black text-[#0F172A] tracking-tight">Active Session</h1>
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-[11px] font-black text-[#94A3B8] uppercase tracking-[0.2em] whitespace-nowrap">
+                  Skill Forge Node #042
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="h-px bg-[#F1F5F9] w-full" />
+
+          {/* Quick Metrics Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-[#F8FAFC] p-5 rounded-[24px] border border-[#F1F5F9] space-y-2 group hover:border-primary-blue transition-all">
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 rounded-lg bg-white border border-[#E2E8F0] flex items-center justify-center shadow-sm">
+                  <Cpu size={16} className="text-primary-blue" />
+                </div>
+                <span className="text-[10px] font-black text-[#10B981] uppercase tracking-widest">Active</span>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.15em]">AI Core</p>
+                <p className="text-sm font-black text-[#1E293B]">Module 2.4</p>
+              </div>
+            </div>
+
+            <div className="bg-[#F8FAFC] p-5 rounded-[24px] border border-[#F1F5F9] space-y-2 group hover:border-warning-amber transition-all">
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 rounded-lg bg-white border border-[#E2E8F0] flex items-center justify-center shadow-sm">
+                  <Activity size={16} className="text-warning-amber" />
+                </div>
+                <span className="text-[10px] font-black text-warning-amber uppercase tracking-widest">99.8%</span>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.15em]">Stability</p>
+                <p className="text-sm font-black text-[#1E293B]">Live Node</p>
+              </div>
+            </div>
+          </div>
+
+          {/* User Details */}
+          <div className="bg-[#0F172A] rounded-[24px] p-6 text-white space-y-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                <Mail size={14} className="text-white/60" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Authorized Email</p>
+                <p className="text-xs font-bold text-white truncate">{user?.email || "guest_042@skillforge.io"}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Area */}
+          <div className="space-y-4">
+            <Link
+              href="/quiz"
+              className="w-full bg-primary-blue text-white py-5 rounded-[24px] font-black text-xs tracking-[0.2em] uppercase hover:bg-deep-indigo transition-all flex items-center justify-center gap-3 shadow-[0_12px_24px_rgba(37,99,235,0.25)] active:scale-[0.98] group"
+            >
+              <span>Begin Quiz Evaluation</span>
+              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+
+            <button
+              onClick={handleSignOut}
+              disabled={isSignOutLoading}
+              className="w-full border-2 border-[#F1F5F9] text-[#64748B] py-5 rounded-[24px] font-black text-xs tracking-[0.2em] uppercase hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50"
+            >
+              {isSignOutLoading ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <>
+                  <LogOut size={18} />
+                  <span>Terminate Session</span>
+                </>
+              )}
             </button>
           </div>
+
+          <div className="text-center pt-2">
+            <p className="text-[14px] font-black text-[#0F172A] uppercase tracking-[0.3em]">INNOVATORS & VISIONARIES CLUB</p>
+            <div className="flex items-center justify-center gap-6 mt-4 opacity-50">
+              <div className="flex items-center gap-1.5 font-black text-[9px] uppercase tracking-widest text-[#64748B]">
+                <Zap size={12} className="text-warning-amber" />
+                <span>Low Latency</span>
+              </div>
+              <div className="flex items-center gap-1.5 font-black text-[9px] uppercase tracking-widest text-[#64748B]">
+                <Lock size={12} className="text-[#10B981]" />
+                <span>Secure Link</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center justify-center gap-8 pt-4">
-          <div className="flex flex-col items-center gap-1">
-            <Zap className="w-4 h-4 text-warning-amber" />
-            <span className="text-[10px] font-bold text-text-meta">LOW LATENCY</span>
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <ShieldCheck className="w-4 h-4 text-success-green" />
-            <span className="text-[10px] font-bold text-text-meta">SECURE LINK</span>
-          </div>
-        </div>
+        {/* Background Gradients */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-40 h-40 bg-primary-blue/5 rounded-full blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-40 h-40 bg-accent-indigo/5 rounded-full blur-[80px]" />
       </motion.div>
     </div>
   );
