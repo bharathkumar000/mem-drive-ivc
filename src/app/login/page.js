@@ -23,7 +23,7 @@ export default function LoginPage() {
   const supabase = createClient();
   const router = useRouter();
   
-  const [mode, setMode] = useState("login"); // 'login' or 'signup'
+  const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -92,7 +92,6 @@ export default function LoginPage() {
       >
         {/* Left Side: Brand & Visual */}
         <div className="bg-primary-blue p-12 text-white flex flex-col justify-between relative overflow-hidden hidden md:flex">
-          {/* ... (Pattern and Branding) ... */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,#ffffff_1px,transparent_1px)] bg-[length:24px_24px]" />
           </div>
@@ -136,7 +135,7 @@ export default function LoginPage() {
         </div>
 
         {/* Right Side: Auth Form */}
-        <div className="p-12 md:p-16 flex flex-col justify-center space-y-8 overflow-y-auto">
+        <div className="p-12 md:p-16 flex flex-col justify-center space-y-8 overflow-y-auto bg-white">
           <div className="space-y-3">
             <h2 className="text-4xl font-black text-text-primary tracking-tight">
               {mode === "login" ? "Welcome Back" : "Create Account"}
