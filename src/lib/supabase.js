@@ -1,6 +1,14 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from "@supabase/ssr";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const createClient = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) console.error("Supabase credentials missing");
+  
+  return createBrowserClient(url, key, {
+    auth: {
+      persistSession: false, // Disables persistent storage (localStorage/cookies)
+      autoRefreshToken: true,
+    }
+  });
+};
