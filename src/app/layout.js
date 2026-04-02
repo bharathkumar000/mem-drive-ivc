@@ -1,15 +1,4 @@
-import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-});
 
 export const metadata = {
   title: "Skill Forge - Innovators & Visionaries Club",
@@ -18,11 +7,14 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${outfit.variable} antialiased h-full`}
-    >
-      <body className="min-h-full flex flex-col font-sans bg-page-bg">
+    <html lang="en" className="antialiased h-full">
+      <head>
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" 
+          rel="stylesheet" 
+        />
+      </head>
+      <body className="min-h-full flex flex-col font-sans bg-page-bg text-black">
         {children}
       </body>
     </html>
