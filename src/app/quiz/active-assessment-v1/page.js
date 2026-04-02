@@ -20,7 +20,7 @@ import { useAntiCheat } from "@/hooks/useAntiCheat";
 export default function ActiveAssessmentPage() {
   const router = useRouter();
   const supabase = createClient();
-  const { warnings, maxWarnings, inputHandlers } = useAntiCheat(true);
+  const { warnings, maxWarnings, inputHandlers, lastViolation } = useAntiCheat(true);
 
   const [questions, setQuestions] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -221,8 +221,74 @@ export default function ActiveAssessmentPage() {
         </div>
       </motion.div>
 
-      {/* Warnings Indicator (Global) */}
-      {warnings > 0 && (
+      {/* Custom Violation Toast/Modal */}
+      <AnimatePresence>
+        {lastViolation && (
+          <motion.div 
+            initial={{ opacity: 0, y: 100, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/20 backdrop-blur-sm"
+          >
+            <div className="bg-white rounded-[32px] p-10 shadow-2xl border border-red-100 max-w-md w-full text-center space-y-6">
+              <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto">
+                <ShieldAlert className="text-red-500 w-10 h-10" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-[#0F172A] tracking-tight uppercase mb-2">Security Anomaly</h3>
+                <p className="text-sm font-bold text-[#64748B] leading-relaxed">
+                  {lastViolation}
+                </p>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl">
+                 <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.2em]">Institutional protocol in effect</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {warnings >= maxWarnings && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[200] bg-[#0F172A] flex items-center justify-center p-6"
+          >
+            <div className="max-w-2xl w-full text-center space-y-12">
+              <motion.div 
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="w-32 h-32 bg-red-500/10 rounded-full flex items-center justify-center mx-auto border-2 border-red-500/20"
+              >
+                <ShieldAlert className="text-red-500 w-16 h-16" />
+              </motion.div>
+              
+              <div className="space-y-6">
+                <h1 className="text-6xl font-black text-white tracking-tighter leading-none">
+                  YOU ARE A <span className="text-red-500 underline decoration-4 underline-offset-8 text-7xl italic">CHEATER</span>
+                </h1>
+                <h2 className="text-4xl font-black text-white/40 tracking-widest uppercase italic">
+                  YOU ARE DISQUALIFIED
+                </h2>
+              </div>
+
+              <p className="text-[#64748B] font-bold tracking-widest uppercase text-sm leading-relaxed max-w-lg mx-auto">
+                Session ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}<br/>
+                Unauthorized activity threshold exceeded. This instance has been logged and reported to the system evaluators.
+              </p>
+
+              <button 
+                onClick={() => router.push('/login')}
+                className="bg-white/5 border border-white/10 text-white px-12 py-5 rounded-2xl font-black text-xs tracking-widest uppercase hover:bg-white/10 transition-all"
+              >
+                Return to Login
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Warnings Indicator (Bottom Fixed) */}
+      {warnings > 0 && warnings < maxWarnings && (
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

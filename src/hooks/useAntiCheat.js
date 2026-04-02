@@ -66,33 +66,36 @@ export function useAntiCheat(quizId, isEnabled = true) {
     };
   }, [isEnabled, warnings]);
 
+  const [lastViolation, setLastViolation] = useState(null);
+
   const incrementWarning = (reason) => {
     setWarnings((prev) => {
       const nextWarnings = prev + 1;
       
-      if (nextWarnings >= maxWarnings) {
-        // Auto-submit logic here
-        // E.g., submitQuiz({ flagged: true, reason });
-        alert("Quiz automatically submitted due to multiple violations.");
-      } else {
-        showToast(`Warning! You have left the quiz area. (${nextWarnings}/${maxWarnings})`);
-      }
+      const message = nextWarnings >= maxWarnings 
+        ? "YOU ARE A CHEATER\nYOU ARE DISQUALIFIED"
+        : `Security Advisory: Unauthorized node activity detected (${nextWarnings}/${maxWarnings}).`;
       
+      setLastViolation(message);
+      
+      // Auto-clear violation message after 3 seconds
+      setTimeout(() => setLastViolation(null), 3000);
+
       return nextWarnings;
     });
   };
 
   const showToast = (message) => {
-    // Basic implementation for toast, can be replaced with a proper toast library
-    alert(message);
+    setLastViolation(message);
+    setTimeout(() => setLastViolation(null), 3000);
   };
 
   // 6. Copy-paste handlers for inputs
   const inputHandlers = {
-    onCopy: (e) => e.preventDefault(),
-    onPaste: (e) => e.preventDefault(),
-    onCut: (e) => e.preventDefault()
+    onCopy: (e) => { e.preventDefault(); showToast("Unauthorized operation: Fragment duplication restricted."); },
+    onPaste: (e) => { e.preventDefault(); showToast("Unauthorized operation: External data import restricted."); },
+    onCut: (e) => { e.preventDefault(); showToast("Unauthorized operation: Fragment extraction restricted."); }
   };
 
-  return { warnings, maxWarnings, inputHandlers };
+  return { warnings, maxWarnings, inputHandlers, lastViolation };
 }
