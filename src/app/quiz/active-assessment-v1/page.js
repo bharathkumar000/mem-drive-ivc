@@ -170,13 +170,25 @@ export default function ActiveAssessmentPage() {
                 </motion.button>
               ))
             ) : (
-              <textarea
-                {...inputHandlers}
-                value={answers[currentQuestion.id] || ""}
-                onChange={(e) => setAnswers(prev => ({ ...prev, [currentQuestion.id]: e.target.value }))}
-                placeholder="Compose your technical response here..."
-                className="w-full h-40 bg-[#F8FAFC] border-2 border-[#F1F5F9] rounded-[28px] p-6 text-sm font-medium placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB] focus:bg-white transition-all resize-none shadow-inner"
-              />
+              <div className="space-y-6">
+                {[
+                  { id: 'overview', label: 'Overview', placeholder: 'Detail the foundational findings...' },
+                  { id: 'apps', label: 'Applications in real world', placeholder: 'How does this manifest in production?' },
+                  { id: 'future', label: 'Future improvements', placeholder: 'Specify optimization trajectories...' },
+                  { id: 'thoughts', label: 'Your thought abt this', placeholder: 'Subjective analysis and critique...' }
+                ].map((row) => (
+                  <div key={row.id} className="space-y-2">
+                    <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.2em] ml-4">{row.label}</label>
+                    <textarea
+                      {...inputHandlers}
+                      value={answers[`${currentQuestion.id}_${row.id}`] || ""}
+                      onChange={(e) => setAnswers(prev => ({ ...prev, [`${currentQuestion.id}_${row.id}`]: e.target.value }))}
+                      placeholder={row.placeholder}
+                      className="w-full h-24 bg-[#F8FAFC] border-2 border-[#F1F5F9] rounded-[24px] p-5 text-sm font-medium placeholder:text-[#cbd5e1] focus:outline-none focus:border-[#2563EB] focus:bg-white transition-all resize-none shadow-sm"
+                    />
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
