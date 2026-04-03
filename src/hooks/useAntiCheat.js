@@ -12,41 +12,53 @@ export function useAntiCheat(quizId, isEnabled = true) {
     // 1 & 2. Visibility and Blur Detection
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        incrementWarning("tab_switch");
+        incrementWarning("TAB_PROTOCOL_VIOLATION");
       }
     };
 
     const handleBlur = () => {
-      incrementWarning("window_blur");
+      incrementWarning("WINDOW_BLUR_ADVISORY");
     };
 
     // 3. Keyboard Blocking
     const handleKeyDown = (e) => {
       // Prevent copy, paste, cut
-      if ((e.ctrlKey || e.metaKey) && ["c", "v", "x"].includes(e.key.toLowerCase())) {
+      if ((e.ctrlKey || e.metaKey) && ["c", "v", "x", "a"].includes(e.key.toLowerCase())) {
         e.preventDefault();
-        showToast("Action restricted during quiz.");
+        showToast("Access Restricted: Fragment operations disabled.");
+      }
+      
+      // Prevent Print Screen & Screenshots
+      if (e.key === "PrintScreen" || e.keyCode === 44) {
+        e.preventDefault();
+        incrementWarning("SCREENSHOT_ATTEMPT");
+        showToast("Security Alert: Screen capture attempt logged.");
+      }
+
+      // Cmd+Shift+3/4/5 for Mac
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && ["3", "4", "5"].includes(e.key)) {
+         e.preventDefault();
+         incrementWarning("SCREENSHOT_ATTEMPT");
       }
       
       // Prevent dev tools (F12, Ctrl+Shift+I)
       if (e.key === "F12" || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "i")) {
         e.preventDefault();
-        showToast("Action restricted during quiz.");
+        showToast("Neural Access Restricted: Developer tools blocked.");
       }
 
-      // Alt+Tab is handled OS-level but usually causes window blur
+      // Alt+Tab usually causes window blur, handled below
     };
 
     // 4. Right Click
     const handleContextMenu = (e) => {
       e.preventDefault();
-      showToast("Action restricted during quiz.");
+      showToast("Security Overlay: Context diagnostics disabled.");
     };
 
-    // 5. Navigation Lock (simplified back button handling)
     const handlePopState = (e) => {
       window.history.pushState(null, "", window.location.href);
-      showToast("You cannot go back during the quiz.");
+      showToast("Protocol Conflict: Navigation sync error.");
     };
     window.history.pushState(null, "", window.location.href);
 

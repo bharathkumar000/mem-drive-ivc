@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -11,7 +13,9 @@ import {
   Settings, 
   LogOut, 
   Activity,
-  Users
+  Users,
+  Menu,
+  X
 } from "lucide-react";
 
 const navItems = [
@@ -19,11 +23,15 @@ const navItems = [
   { href: "/quiz/admin/quizzes", label: "Protocols", icon: FileText },
   { href: "/quiz/admin/users", label: "Users", icon: Users },
   { href: "/quiz/admin/security", label: "Security", icon: ShieldCheck },
+  { href: "/dashboard/reports", label: "Reports", icon: FileText },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleSidebar = () => setIsOpen(!isOpen);
 
   const handleLogout = () => {
     document.cookie = "mock_session=; path=/; max-age=0;";
@@ -31,7 +39,31 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[240px] bg-sidebar-bg border-r border-[#E8EDF2] flex flex-col z-50">
+    <>
+      {/* Mobile Toggle Button */}
+      <button 
+        onClick={toggleSidebar}
+        className="lg:hidden fixed top-5 left-5 z-[60] p-3 bg-white border border-[#E8EDF2] rounded-xl shadow-lg"
+      >
+        {isOpen ? <X size={20} className="text-[#0F172A]" /> : <Menu size={20} className="text-[#0F172A]" />}
+      </button>
+
+      {/* Backdrop */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={toggleSidebar}
+            className="fixed inset-0 bg-[#0F172A]/20 backdrop-blur-sm z-[55] lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      <aside className={`fixed left-0 top-0 bottom-0 w-[280px] bg-white border-r border-[#E8EDF2] flex flex-col z-[58] transition-transform duration-500 ease-spring lg:translate-x-0 ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      }`}>
       {/* Logo */}
       <div className="px-6 h-20 flex items-center gap-3">
         <div className="w-8 h-8 bg-primary-blue rounded-lg flex items-center justify-center">
@@ -79,5 +111,6 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }

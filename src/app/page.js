@@ -25,156 +25,127 @@ export default function LandingPortal() {
   const supabase = createClient();
   const router = useRouter();
   const [user, setUser] = useState(null);
-  const [isSignOutLoading, setIsSignOutLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function checkAuth() {
       const { data: { user } } = await supabase.auth.getUser();
-      // Also check for mock session cookie
       const hasMockSession = document.cookie.includes("mock_session=");
       
       if (!user && !hasMockSession) {
         router.push("/login");
       } else {
         setUser(user);
+        setLoading(false);
       }
     }
     checkAuth();
   }, []);
 
-  const handleSignOut = async () => {
-    setIsSignOutLoading(true);
-    // Force clear all auth cookies for both mock and live sessions
-    document.cookie = "mock_session=; path=/; max-age=0;";
-    document.cookie = "mock_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-    
-    await supabase.auth.signOut();
-    
-    // Immediate hard redirect to ensure state clear
-    window.location.href = "/login";
-  };
+  if (loading) {
+     return (
+       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-[#2563EB]/20 border-t-[#2563EB] rounded-full animate-spin" />
+       </div>
+     );
+  }
 
   return (
     <div className="min-h-[100dvh] w-full bg-[#F8FAFC] flex items-center justify-center p-6 relative overflow-hidden font-sans text-black">
       {/* Subtle Background Effects */}
-      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary-blue/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#2563EB]/5 rounded-full blur-[120px] pointer-events-none" />
       
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-[500px] bg-white rounded-[40px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] border border-[#E2E8F0] relative z-10 overflow-hidden"
       >
         {/* Top Branding Strip */}
-        <div className="bg-primary-blue h-2 w-full" />
+        <div className="bg-[#2563EB] h-2 w-full" />
         
         <div className="p-8 md:p-12 space-y-8">
-          {/* Header & User Info */}
+          {/* Header & Identifer */}
           <div className="flex flex-col items-center text-center space-y-6">
             <div className="relative group">
-              <div className="w-20 h-20 bg-[#F1F5F9] rounded-[24px] border-2 border-[#E2E8F0] flex items-center justify-center text-primary-blue shadow-sm group-hover:border-primary-blue transition-all">
-                {user?.email?.[0].toUpperCase() || <User size={32} className="stroke-[1.5]" />}
+              <div className="w-20 h-20 bg-[#F8FAFC] rounded-[24px] border-2 border-[#E2E8F0] flex items-center justify-center shadow-inner group-hover:border-[#2563EB] transition-all">
+                <div className="w-12 h-12 bg-[#0F172A] rounded-2xl flex items-center justify-center text-white font-black text-xl">
+                    {user?.email?.[0].toUpperCase() || "S"}
+                </div>
               </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#10B981] border-4 border-white rounded-full animate-pulse shadow-sm" />
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#10B981] border-4 border-white rounded-full shadow-sm" />
             </div>
             
-            <div className="space-y-1">
-              <h1 className="text-3xl font-black text-[#0F172A] tracking-tight">Active Session</h1>
-              <div className="flex items-center justify-center gap-2">
-                <p className="text-[11px] font-black text-[#94A3B8] uppercase tracking-[0.2em] whitespace-nowrap">
-                  Skill Forge Node #042
-                </p>
-              </div>
+            <div className="space-y-1 text-center">
+               <h1 className="text-3xl font-black text-[#0F172A] tracking-tighter">Authorized Node Active</h1>
+               <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.3em]">Skill Forge Sync Protocol #001</p>
             </div>
           </div>
 
-          <div className="h-px bg-[#F1F5F9] w-full" />
+          <div className="h-px bg-gray-100 w-full" />
 
-          {/* Quick Metrics Grid */}
+          {/* Core Telemetry Grid */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[#F8FAFC] p-5 rounded-[24px] border border-[#F1F5F9] space-y-2 group hover:border-primary-blue transition-all">
-              <div className="flex items-center justify-between">
-                <div className="w-8 h-8 rounded-lg bg-white border border-[#E2E8F0] flex items-center justify-center shadow-sm">
-                  <Cpu size={16} className="text-primary-blue" />
+            <div className="bg-[#F8FAFC] p-6 rounded-[24px] border border-[#F1F5F9] space-y-3">
+               <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center">
+                  <Cpu size={16} className="text-[#2563EB]" />
+               </div>
+               <div>
+                  <p className="text-[9px] font-black text-[#94A3B8] uppercase tracking-widest leading-none mb-1">Compute Core</p>
+                  <p className="text-sm font-black text-[#0F172A]">Module 2.4</p>
+               </div>
+            </div>
+
+            <div className="bg-[#F8FAFC] p-6 rounded-[24px] border border-[#F1F5F9] space-y-3">
+               <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center">
+                  <Activity size={16} className="text-[#10B981]" />
+               </div>
+               <div>
+                  <p className="text-[9px] font-black text-[#94A3B8] uppercase tracking-widest leading-none mb-1">Stability</p>
+                  <p className="text-sm font-black text-[#0F172A]">Live Sync</p>
+               </div>
+            </div>
+          </div>
+
+          {/* User Telemetry Card */}
+          <div className="bg-[#0F172A] rounded-[24px] p-6 space-y-4">
+             <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                   <Mail size={14} className="text-white/60" />
                 </div>
-                <span className="text-[10px] font-black text-[#10B981] uppercase tracking-widest">Active</span>
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.15em]">AI Core</p>
-                <p className="text-sm font-black text-[#1E293B]">Module 2.4</p>
-              </div>
-            </div>
-
-            <div className="bg-[#F8FAFC] p-5 rounded-[24px] border border-[#F1F5F9] space-y-2 group hover:border-warning-amber transition-all">
-              <div className="flex items-center justify-between">
-                <div className="w-8 h-8 rounded-lg bg-white border border-[#E2E8F0] flex items-center justify-center shadow-sm">
-                  <Activity size={16} className="text-warning-amber" />
+                <div className="flex-1 min-w-0">
+                   <p className="text-[9px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">Authenticated Identity</p>
+                   <p className="text-xs font-bold text-white truncate">{user?.email || "CANDIDATE_ACCESS_NODE"}</p>
                 </div>
-                <span className="text-[10px] font-black text-warning-amber uppercase tracking-widest">99.8%</span>
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.15em]">Stability</p>
-                <p className="text-sm font-black text-[#1E293B]">Live Node</p>
-              </div>
-            </div>
+             </div>
           </div>
 
-          {/* User Details */}
-          <div className="bg-[#0F172A] rounded-[24px] p-6 text-white space-y-4 shadow-xl">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                <Mail size={14} className="text-white/60" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Authorized Email</p>
-                <p className="text-xs font-bold text-white truncate">{user?.email || "guest_042@skillforge.io"}</p>
-              </div>
-            </div>
-          </div>
+          {/* Initiation Trigger */}
+          <Link
+            href="/quiz"
+            className="w-full bg-[#2563EB] text-white py-6 rounded-[28px] font-black text-xs tracking-[0.25em] uppercase hover:bg-[#1E40AF] transition-all flex items-center justify-center gap-4 shadow-[0_20px_40px_-10px_rgba(37,99,235,0.3)] group"
+          >
+            <span>Begin Evaluation</span>
+            <ArrowRight size={18} className="group-hover:translate-x-1.5 transition-transform" />
+          </Link>
 
-          {/* Action Area */}
-          <div className="space-y-4">
-            <Link
-              href="/quiz"
-              className="w-full bg-primary-blue text-white py-5 rounded-[24px] font-black text-xs tracking-[0.2em] uppercase hover:bg-deep-indigo transition-all flex items-center justify-center gap-3 shadow-[0_12px_24px_rgba(37,99,235,0.25)] active:scale-[0.98] group"
-            >
-              <span>Begin Quiz Evaluation</span>
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-
-            <button
-              onClick={handleSignOut}
-              disabled={isSignOutLoading}
-              className="w-full border-2 border-[#F1F5F9] text-[#64748B] py-5 rounded-[24px] font-black text-xs tracking-[0.2em] uppercase hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50"
-            >
-              {isSignOutLoading ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <>
-                  <LogOut size={18} />
-                  <span>Terminate Session</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          <div className="text-center pt-2">
-            <p className="text-[14px] font-black text-[#0F172A] uppercase tracking-[0.3em]">INNOVATORS & VISIONARIES CLUB</p>
-            <div className="flex items-center justify-center gap-6 mt-4 opacity-50">
-              <div className="flex items-center gap-1.5 font-black text-[9px] uppercase tracking-widest text-[#64748B]">
-                <Zap size={12} className="text-warning-amber" />
-                <span>Low Latency</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-black text-[9px] uppercase tracking-widest text-[#64748B]">
-                <Lock size={12} className="text-[#10B981]" />
-                <span>Secure Link</span>
-              </div>
+          {/* Footnotes */}
+          <div className="text-center space-y-4 pt-4 border-t border-gray-50/50">
+            <p className="text-[12px] font-black text-[#0F172A] uppercase tracking-[0.3em]">INNOVATORS & VISIONARIES CLUB</p>
+            <div className="flex justify-center gap-8 opacity-40">
+               <div className="flex items-center gap-2">
+                  <Zap size={14} className="text-[#2563EB]" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Low Latency</span>
+               </div>
+               <div className="flex items-center gap-2">
+                  <Lock size={14} className="text-[#10B981]" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Encrypted</span>
+               </div>
             </div>
           </div>
         </div>
 
-        {/* Background Gradients */}
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-40 h-40 bg-primary-blue/5 rounded-full blur-[80px]" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-40 h-40 bg-accent-indigo/5 rounded-full blur-[80px]" />
+        {/* Cinematic Under-overlay */}
+        <div className="absolute top-0 right-0 w-40 h-40 bg-[#2563EB]/5 rounded-full blur-[60px]" />
       </motion.div>
     </div>
   );

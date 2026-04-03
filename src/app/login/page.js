@@ -269,8 +269,8 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <form onSubmit={handleAuth} className="space-y-4 mt-8 flex flex-col items-center">
-                <div className="w-full space-y-3 bg-[#F8FAFC]/50 p-6 rounded-[32px] border border-[#F1F5F9]">
+              <form onSubmit={handleAuth} className="space-y-4 mt-6 flex flex-col items-center">
+                <div className="w-full space-y-3 bg-[#F8FAFC]/50 pt-5 pb-6 px-6 rounded-[32px] border border-[#F1F5F9]">
                   {userRole === "evaluator" && mode === "signup" && (
                     <motion.div 
                       key="evaluator-key"
@@ -278,7 +278,7 @@ export default function LoginPage() {
                       animate={{ opacity: 1, height: "auto" }}
                       className="space-y-1.5 mb-2"
                     >
-                      <label className="text-[9px] font-black text-[#94A3B8] uppercase tracking-[0.2em] block text-center">Access Protocol Key</label>
+                      <label className="text-[9px] font-black text-[#94A3B8] uppercase tracking-[0.2em] block text-left ml-4">Access Protocol Key</label>
                       <div className="relative group overflow-hidden">
                         <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#94A3B8] transition-colors group-focus-within:text-primary-blue">
                           <Fingerprint size={18} />
@@ -289,19 +289,19 @@ export default function LoginPage() {
                           value={accessKey}
                           onChange={(e) => setAccessKey(e.target.value)}
                           placeholder="Evaluator Pin"
-                          className="w-full bg-white border border-[#E2E8F0] rounded-[22px] py-4 pl-14 pr-6 text-sm font-bold text-[#0F172A] text-center focus:outline-none focus:border-primary-blue focus:shadow-[0_0_0_4px_rgba(37,99,235,0.1)] transition-all"
+                          className="w-full bg-white border border-[#E2E8F0] rounded-[22px] py-4 pl-14 pr-6 text-sm font-bold text-[#0F172A] text-left focus:outline-none focus:border-primary-blue focus:shadow-[0_0_0_4px_rgba(37,99,235,0.1)] transition-all"
                         />
                       </div>
                     </motion.div>
                   )}
 
                   {mode === "signup" && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      className="space-y-1.5"
-                    >
-                      <label className="text-[9px] font-black text-[#94A3B8] uppercase tracking-[0.2em] block text-center">Full Name</label>
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="space-y-1.5"
+                      >
+                        <label className="text-[9px] font-black text-[#94A3B8] uppercase tracking-[0.2em] block text-left ml-4">Full Name</label>
                       <div className="relative group overflow-hidden">
                         <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#94A3B8] transition-colors group-focus-within:text-primary-blue">
                           <User size={18} />
@@ -312,14 +312,14 @@ export default function LoginPage() {
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
                           placeholder="Candidate Full Name"
-                          className="w-full bg-white border border-[#E2E8F0] rounded-[22px] py-4 pl-14 pr-6 text-sm font-bold text-[#0F172A] text-center focus:outline-none focus:border-primary-blue focus:shadow-[0_0_0_4px_rgba(37,99,235,0.1)] transition-all"
+                          className="w-full bg-white border border-[#E2E8F0] rounded-[22px] py-4 pl-14 pr-6 text-sm font-bold text-[#0F172A] text-left focus:outline-none focus:border-primary-blue focus:shadow-[0_0_0_4px_rgba(37,99,235,0.1)] transition-all"
                         />
                       </div>
                     </motion.div>
                   )}
 
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black text-[#94A3B8] uppercase tracking-[0.2em] block text-center">Identity Identifier</label>
+                    <label className="text-[9px] font-black text-[#94A3B8] uppercase tracking-[0.2em] block text-left ml-4">Identity Identifier</label>
                     <div className="relative group">
                       <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#94A3B8] transition-colors group-focus-within:text-primary-blue">
                         <Mail size={18} />
@@ -330,13 +330,13 @@ export default function LoginPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Node Email or ID"
-                        className="w-full bg-white border border-[#E2E8F0] rounded-[22px] py-4 pl-14 pr-6 text-sm font-bold text-[#0F172A] text-center focus:outline-none focus:border-primary-blue focus:shadow-[0_0_0_4px_rgba(37,99,235,0.1)] transition-all"
+                        className="w-full bg-white border border-[#E2E8F0] rounded-[22px] py-4 pl-14 pr-6 text-sm font-bold text-[#0F172A] text-left focus:outline-none focus:border-primary-blue focus:shadow-[0_0_0_4px_rgba(37,99,235,0.1)] transition-all"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black text-[#94A3B8] uppercase tracking-[0.2em] block text-center">Security Key</label>
+                    <label className="text-[9px] font-black text-[#94A3B8] uppercase tracking-[0.2em] block text-left ml-4">Security Key</label>
                     <div className="relative group">
                       <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#94A3B8] transition-colors group-focus-within:text-primary-blue">
                         <Lock size={18} />
@@ -347,7 +347,7 @@ export default function LoginPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Protocol Key"
-                        className="w-full bg-white border border-[#E2E8F0] rounded-[22px] py-4 pl-14 pr-12 text-sm font-bold text-[#0F172A] text-center focus:outline-none focus:border-primary-blue focus:shadow-[0_0_0_4px_rgba(37,99,235,0.1)] transition-all"
+                        className="w-full bg-white border border-[#E2E8F0] rounded-[22px] py-4 pl-14 pr-12 text-sm font-bold text-[#0F172A] text-left focus:outline-none focus:border-primary-blue focus:shadow-[0_0_0_4px_rgba(37,99,235,0.1)] transition-all"
                       />
                       <button 
                         type="button" 

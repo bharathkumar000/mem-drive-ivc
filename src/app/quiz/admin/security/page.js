@@ -101,14 +101,10 @@ export default function AdminSecurityPage() {
                  {safeguards.map((s, i) => (
                    <motion.div 
                      key={s.id}
-                     whileHover={{ x: 4 }}
-                     className={`flex items-center justify-between p-6 rounded-[24px] border-2 transition-all cursor-pointer ${
-                       s.enabled ? "bg-white border-[#2563EB]/10 shadow-lg shadow-blue-50/50" : "bg-gray-50/50 border-transparent opacity-60"
-                     }`}
-                     onClick={() => toggleSafeguard(s.id)}
+                     className="flex items-center justify-between p-6 rounded-[24px] border-2 bg-white border-[#2563EB]/10 shadow-lg shadow-blue-50/50"
                    >
                       <div className="flex items-center gap-5">
-                         <div className={`p-4 rounded-2xl transition-colors ${s.enabled ? "bg-[#F0F7FF] text-[#2563EB]" : "bg-white text-[#94A3B8]"}`}>
+                         <div className="p-4 rounded-2xl bg-[#F0F7FF] text-[#2563EB]">
                             <s.icon size={24} />
                          </div>
                          <div className="space-y-1">
@@ -118,11 +114,11 @@ export default function AdminSecurityPage() {
                          </div>
                       </div>
                       
-                      <div className={`w-14 h-8 rounded-full transition-all flex items-center px-1.5 ${s.enabled ? "bg-[#2563EB]" : "bg-[#CBD5E1]"}`}>
-                         <motion.div 
-                           animate={{ x: s.enabled ? 24 : 0 }}
-                           className="w-5 h-5 bg-white rounded-full shadow-sm" 
-                         />
+                      <div className="flex flex-col items-end gap-2">
+                         <div className="w-14 h-8 rounded-full bg-[#2563EB] flex items-center justify-end px-1.5 opacity-50 cursor-not-allowed">
+                            <div className="w-5 h-5 bg-white rounded-full shadow-sm" />
+                         </div>
+                         <span className="text-[9px] font-black text-[#2563EB] uppercase tracking-tighter">System Enforced</span>
                       </div>
                    </motion.div>
                  ))}
