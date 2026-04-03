@@ -257,7 +257,31 @@ export default function DashboardPage() {
         </header>
 
         <section className="space-y-12">
-          {/* Attended Sessions - Horizontal Scroll */}
+          {/* Core Telemetry Grid - Primary Display */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {stats.map((stat, idx) => (
+              <motion.div
+                key={stat.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className="bg-white rounded-[32px] p-8 border border-[#E2E8F0] shadow-sm hover:border-[#2563EB]/20 transition-all group overflow-hidden relative"
+              >
+                <div className="relative z-10 space-y-4">
+                  <div className={`p-3 w-fit rounded-xl bg-[#F8FAFC] ${stat.color}`}>
+                    <stat.icon size={22} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <p className="text-3xl font-black text-[#0F172A] mb-1">{stat.value}</p>
+                    <p className="text-[9px] font-black text-[#94A3B8] uppercase tracking-widest leading-none">{stat.title}</p>
+                  </div>
+                </div>
+                <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-[40px] opacity-[0.03] -mr-8 -mt-8 ${stat.color.replace('text-', 'bg-')}`} />
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Attended Sessions - Logs Display */}
           <div className="space-y-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -316,30 +340,6 @@ export default function DashboardPage() {
                  </motion.div>
                ))}
             </div>
-          </div>
-
-          {/* Core Telemetry Grid - Secondary Display */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {stats.map((stat, idx) => (
-              <motion.div
-                key={stat.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-white rounded-[32px] p-8 border border-[#E2E8F0] shadow-sm hover:border-[#2563EB]/20 transition-all group overflow-hidden relative"
-              >
-                <div className="relative z-10 space-y-4">
-                  <div className={`p-3 w-fit rounded-xl bg-[#F8FAFC] ${stat.color}`}>
-                    <stat.icon size={22} strokeWidth={2.5} />
-                  </div>
-                  <div>
-                    <p className="text-3xl font-black text-[#0F172A] mb-1">{stat.value}</p>
-                    <p className="text-[9px] font-black text-[#94A3B8] uppercase tracking-widest leading-none">{stat.title}</p>
-                  </div>
-                </div>
-                <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-[40px] opacity-[0.03] -mr-8 -mt-8 ${stat.color.replace('text-', 'bg-')}`} />
-              </motion.div>
-            ))}
           </div>
         </section>
       </main>

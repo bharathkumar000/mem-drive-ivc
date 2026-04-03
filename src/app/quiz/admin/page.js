@@ -20,8 +20,10 @@ import {
   Circle
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [submissions, setSubmissions] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [realStats, setRealStats] = useState({
@@ -37,6 +39,36 @@ export default function AdminDashboard() {
   const supabase = createClient();
 
   useEffect(() => {
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
+      const mockSession = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("mock_session="))
+        ?.split("=")[1];
+      
+      const isMockAdmin = mockSession === "admin";
+      
+      if (!user && !isMockAdmin) {
+        router.push("/login");
+        return;
+      }
+
+      if (user && !isMockAdmin) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        
+        if (profile?.role !== "admin") {
+          router.push("/");
+          return;
+        }
+      }
+      
+      loadData();
+    }
+
     async function loadData() {
       // Fetch Submissions
       const { data: subData } = await supabase
@@ -82,7 +114,7 @@ export default function AdminDashboard() {
       setTeamUtilization(userData || []);
       setLoading(false);
     }
-    loadData();
+    checkAuth();
   }, []);
 
   const statsDisplay = [

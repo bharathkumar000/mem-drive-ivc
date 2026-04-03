@@ -36,7 +36,7 @@ export async function middleware(request) {
 
   const path = request.nextUrl.pathname;
 
-  // Skip middleware for static assets, favicon, etc.
+  // Skip middleware for static assets
   if (
     path.startsWith("/_next") ||
     path.startsWith("/api") ||
@@ -50,35 +50,41 @@ export async function middleware(request) {
   }
 
   // Auth/Redirect logic
-  const isLoginRoute = path === "/login";
+  // The root path '/' is now the login page
+  const isAuthPage = path === "/";
   const isAuthCallback = path === "/auth/callback";
   const isAdminRoute = path.startsWith("/admin") || path.startsWith("/quiz/admin");
-  const isProtected = path === "/" || path.startsWith("/quiz") || isAdminRoute;
+  const isProtectedRoute = path.startsWith("/quiz") || path.startsWith("/dashboard") || isAdminRoute;
 
-  // Redirect to login if not authenticated and trying to access protected route
-  if (!isAuthenticated && isProtected && !isLoginRoute && !isAuthCallback) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // Redirect legacy /login to root
+  if (path === "/login") {
+     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Redirect to root-to-quiz if authenticated and at the root portal
-  if (isAuthenticated && path === "/") {
-    return NextResponse.redirect(new URL("/quiz", request.url));
+  // Redirect to root if not authenticated and trying to access protected route
+  if (!isAuthenticated && isProtectedRoute && !isAuthCallback) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Redirect to root (which now goes to quiz) if already authenticated and trying to access login
-  if (isAuthenticated && isLoginRoute) {
-    return NextResponse.redirect(new URL("/quiz", request.url));
+  // Redirect to dashboard if already authenticated and trying to access login/root
+  if (isAuthenticated && isAuthPage) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Admin access control
   if (isAdminRoute && !isMockAdmin) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user?.id)
-      .single();
+    // If not mock admin, check Supabase role
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
 
-    if (profile?.role !== "admin") {
+      if (profile?.role !== "admin") {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
+    } else {
       return NextResponse.redirect(new URL("/", request.url));
     }
   }
