@@ -42,8 +42,10 @@ export default function DashboardPage() {
   const [sessionLeaderboard, setSessionLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [detailsLoading, setDetailsLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     const cookies = document.cookie.split(';');
     const sessionCookie = cookies.find(c => c.trim().startsWith('mock_session='));
     if (sessionCookie) {
@@ -231,12 +233,14 @@ export default function DashboardPage() {
     );
   }
 
+  if (!isMounted) return null;
+
   return (
     <div className="flex h-screen bg-[#F0F2F5] text-[#0F172A] font-sans selection:bg-blue-100 overflow-hidden">
       <Sidebar />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col p-10 md:p-14 ml-0 lg:ml-[240px]">
+      <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col p-8 md:p-14 ml-0 lg:ml-[280px]">
         <header className="flex justify-between items-start mb-12 w-full">
           <div className="space-y-1">
             <h2 className="text-5xl font-black text-[#0F172A] tracking-tighter uppercase leading-none">
