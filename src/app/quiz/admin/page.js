@@ -130,7 +130,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-page-bg flex font-sans">
       <Sidebar />
 
-      <main className="flex-1 ml-[240px] p-10 space-y-10">
+      <main className="flex-1 ml-0 lg:ml-[280px] p-8 md:p-14 space-y-10 min-h-screen">
         {/* Header */}
         <div className="flex items-center justify-between">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
@@ -146,8 +146,8 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* 6-Column Stats Grid */}
-        <div className="grid grid-cols-6 gap-6">
+        {/* 6-Column Stats Grid - Responsive scaling */}
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6">
           {statsDisplay.map((stat, i) => (
             <motion.div
               key={stat.label}
