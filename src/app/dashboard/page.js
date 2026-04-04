@@ -160,9 +160,7 @@ export default function DashboardPage() {
 
   if (selectedSession) {
     return (
-      <div className="flex h-screen bg-[#F0F2F5] text-[#0F172A] font-sans overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto p-10 md:p-14 space-y-12 ml-0 lg:ml-20">
+      <div className="flex flex-col p-10 md:p-14 space-y-12">
            <button 
              onClick={() => setSelectedSession(null)}
              className="flex items-center gap-3 px-6 py-3 bg-white border border-[#E2E8F0] shadow-sm rounded-2xl text-[10px] font-black uppercase tracking-widest text-[#64748B] hover:text-[#0F172A] hover:bg-gray-50 transition-all group"
@@ -293,7 +291,6 @@ export default function DashboardPage() {
                  ))}
               </div>
            </div>
-        </main>
       </div>
     );
   }
@@ -301,31 +298,27 @@ export default function DashboardPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="flex h-screen bg-[#F0F2F5] text-[#0F172A] font-sans selection:bg-blue-100 overflow-hidden">
-      <Sidebar />
+    <div className="flex flex-col p-8 md:p-14 space-y-12">
+      <header className="flex justify-between items-start mb-12 w-full">
+        <div className="space-y-1">
+          <h2 className="text-5xl font-black text-[#0F172A] tracking-tighter uppercase leading-none">
+            CONTROL <span className="text-[#2563EB]">CENTER</span>
+          </h2>
+          <p className="text-[11px] font-black text-[#94A3B8] uppercase tracking-[0.4em]">
+            Authorized Station Analysis Protocol
+          </p>
+        </div>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col p-8 md:p-14 ml-0 lg:ml-[280px]">
-        <header className="flex justify-between items-start mb-12 w-full">
-          <div className="space-y-1">
-            <h2 className="text-5xl font-black text-[#0F172A] tracking-tighter uppercase leading-none">
-              CONTROL <span className="text-[#2563EB]">CENTER</span>
-            </h2>
-            <p className="text-[11px] font-black text-[#94A3B8] uppercase tracking-[0.4em]">
-              Authorized Station Analysis Protocol
-            </p>
-          </div>
-
-          {(role === "admin" || role === "evaluator") && (
-            <button 
-              onClick={() => router.push('/quiz')}
-              className="bg-[#2563EB] text-white px-8 py-4 rounded-2xl font-black text-xs tracking-widest uppercase flex items-center gap-4 shadow-[0_15px_40px_rgba(37,99,235,0.3)] hover:bg-[#1E40AF] transition-all active:scale-[0.98] group"
-            >
-              <Zap size={20} className="group-hover:translate-x-1.5 transition-transform" />
-              <span>Initialize Session</span>
-            </button>
-          )}
-        </header>
+        {(role === "admin" || role === "evaluator") && (
+          <button 
+            onClick={() => router.push('/quiz')}
+            className="bg-[#2563EB] text-white px-8 py-4 rounded-2xl font-black text-xs tracking-widest uppercase flex items-center gap-4 shadow-[0_15px_40px_rgba(37,99,235,0.3)] hover:bg-[#1E40AF] transition-all active:scale-[0.98] group"
+          >
+            <Zap size={20} className="group-hover:translate-x-1.5 transition-transform" />
+            <span>Initialize Session</span>
+          </button>
+        )}
+      </header>
 
         <section className="space-y-12">
           {/* Core Telemetry Grid - Primary Display */}
@@ -469,7 +462,6 @@ export default function DashboardPage() {
              </div>
           </div>
         </section>
-      </main>
     </div>
   );
 }
