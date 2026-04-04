@@ -16,25 +16,40 @@ import {
   Trophy,
   History
 } from "lucide-react";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
+import { useSidebar } from "@/context/SidebarContext";
+import Link from "next/link";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { isExpanded, setIsExpanded } = useSidebar();
   const [isOpen, setIsOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [role, setRole] = useState("user");
+  const [userName, setUserName] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const cookies = document.cookie.split(';');
-    const sessionCookie = cookies.find(c => c.trim().startsWith('mock_session='));
-    if (sessionCookie) {
-      setRole(sessionCookie.split('=')[1]);
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+        if (profile) setUserName(profile.full_name);
+      }
+      
+      const cookies = document.cookie.split(';');
+      const sessionCookie = cookies.find(c => c.trim().startsWith('mock_session='));
+      if (sessionCookie) {
+        setRole(sessionCookie.split('=')[1]);
+      }
+      setIsMounted(true);
     }
+    init();
   }, []);
+
+  if (!isMounted) return null;
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -47,17 +62,17 @@ export default function Sidebar() {
   const isAdmin = role === "admin" || role === "evaluator";
 
   const adminItems = [
+    { href: "/dashboard/reports", label: "Reports", icon: Activity },
     { href: "/quiz/admin", label: "Control Center", icon: LayoutDashboard },
     { href: "/quiz/admin/quizzes", label: "Protocols", icon: FileText },
     { href: "/quiz/admin/users", label: "Node Registry", icon: Users },
     { href: "/quiz/admin/security", label: "Security Audit", icon: ShieldCheck },
-    { href: "/dashboard/reports", label: "Intelligence", icon: Activity },
   ];
 
   const candidateItems = [
+    { href: "/dashboard/reports", label: "Reports", icon: Activity },
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/quiz/access", label: "Attendance List", icon: Zap },
-    { href: "/dashboard/reports", label: "Answer Analysis", icon: Activity },
+    { href: "/quiz/access", label: "Protocol", icon: Zap },
   ];
 
   const navItems = isAdmin ? adminItems : candidateItems;
@@ -90,59 +105,69 @@ export default function Sidebar() {
         onMouseLeave={() => setIsExpanded(false)}
         initial={false}
         animate={{ 
-          width: isExpanded ? 280 : 80,
+          width: isExpanded ? 240 : 72,
           translateX: (isOpen || !isExpanded) ? 0 : 0 
         }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className={`fixed left-0 top-0 bottom-0 bg-white border-r border-slate-100 flex flex-col z-[65] transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] lg:translate-x-0 ${
+        transition={{ type: "spring", stiffness: 400, damping: 35 }}
+        className={`fixed left-0 top-0 bottom-0 bg-white border-r border-[#F1F5F9] flex flex-col z-[65] lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        } overflow-hidden`}
       >
         {/* Logo Section */}
-        <div className="h-28 flex items-center px-[18px] relative z-10 overflow-hidden">
-           <div className="flex items-center gap-4 min-w-[240px]">
-              <div className="w-11 h-11 bg-blue-600 rounded-xl flex items-center justify-center shadow-xl shadow-blue-100 flex-shrink-0">
+        <div className="h-24 flex items-center px-4 relative z-10">
+           <div className="flex items-center gap-3.5 min-w-[200px]">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-100 flex-shrink-0"
+              >
                 <ShieldCheck className="w-6 h-6 text-white" />
-              </div>
+              </motion.div>
               <AnimatePresence>
                 {isExpanded && (
                   <motion.div 
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
-                    className="flex flex-col"
+                    transition={{ delay: 0.1 }}
                   >
-                    <span className="font-black text-xl text-slate-900 tracking-tighter block leading-none">SKILL<span className="text-blue-600">FORGE</span></span>
-                    <span className="text-[8px] font-black tracking-[0.4em] text-slate-300 uppercase mt-1.5 block">Enterprise v4</span>
+                    <span className="font-[900] text-2xl text-[#0F172A] tracking-tight block leading-none">Skill Forge</span>
                   </motion.div>
                 )}
               </AnimatePresence>
            </div>
         </div>
 
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="px-6 mb-8 relative z-10 overflow-hidden"
-            >
-               <div className={`p-4 rounded-3xl border ${isAdmin ? "bg-blue-50 border-blue-100" : "bg-slate-50 border-slate-100"} flex items-center gap-4 transition-all hover:shadow-lg hover:shadow-slate-100 group`}>
-                  <div className={`w-2 h-2 rounded-full ${isAdmin ? "bg-blue-600 animate-pulse" : "bg-slate-300"}`} />
-                  <div className="flex flex-col min-w-0">
-                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] block leading-none truncate ${isAdmin ? "text-blue-600" : "text-slate-500"}`}>
-                      {isAdmin ? "Evaluator Node" : "Candidate Station"}
-                    </span>
-                    <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest mt-1.5 block">Identity Verified</span>
-                  </div>
-               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="px-4 mb-6 relative z-10 h-10">
+          <AnimatePresence mode="wait">
+            {isExpanded ? (
+              <motion.div 
+                key="expanded-chip"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-[#F8FAFC] rounded-full px-5 py-3 flex items-center gap-2.5 border border-[#F1F5F9] transition-all w-fit whitespace-nowrap"
+              >
+                  <div className="w-1 h-1 rounded-full bg-[#94A3B8]" />
+                  <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[#94A3B8] leading-none">
+                    {isAdmin ? "Evaluator Node" : "Candidate Station"}
+                  </span>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="collapsed-chip"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex justify-center w-10"
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-[#F1F5F9] border border-[#E2E8F0]" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-[10px] space-y-1 relative z-10 overflow-y-auto custom-scrollbar overflow-x-hidden">
+        <nav className="flex-1 px-2 space-y-1 relative z-10 overflow-y-auto custom-scrollbar overflow-x-hidden">
           {navItems.map((item) => {
             const isActive = pathname ? (pathname === item.href || (item.label !== "Dashboard" && item.label !== "Control Center" && pathname.startsWith(item.href))) : false;
             return (
@@ -150,68 +175,61 @@ export default function Sidebar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setIsOpen(false)}
-                className={`flex items-center px-[14px] py-4 transition-all rounded-xl group relative overflow-hidden h-[56px] min-w-[240px] ${
+                className={`flex items-center transition-all rounded-full mx-1.5 group relative overflow-hidden h-[46px] ${
                   isActive 
-                    ? "bg-blue-600 text-white shadow-xl shadow-blue-200" 
-                    : "text-slate-400 hover:bg-slate-50 hover:text-slate-900"
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-100" 
+                    : "text-[#94A3B8] hover:bg-[#F8FAFC] hover:text-[#0F172A]"
                 }`}
+                style={{ width: isExpanded ? '228px' : '60px' }}
               >
-                <div className="flex items-center gap-6 flex-shrink-0">
-                  <item.icon size={22} className={isActive ? "text-white" : "text-slate-300 group-hover:text-blue-600 transition-colors flex-shrink-0"} />
+                <div className={`flex items-center gap-5 px-0 w-full ${isExpanded ? "pl-5" : "justify-center"}`}>
+                  <item.icon size={18} className={`${isActive ? "text-white" : "text-[#94A3B8] group-hover:text-blue-600"} transition-all duration-300 flex-shrink-0`} />
                   <AnimatePresence>
                     {isExpanded && (
                       <motion.span 
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -10 }}
-                        className="text-[12px] font-black uppercase tracking-tight whitespace-nowrap"
+                        transition={{ duration: 0.2 }}
+                        className="text-[10px] font-extrabold uppercase tracking-[0.2em] whitespace-nowrap"
                       >
                         {item.label}
                       </motion.span>
                     )}
                   </AnimatePresence>
+                  
+                  {isActive && isExpanded && (
+                    <motion.div 
+                      layoutId="active-indicator" 
+                      className="ml-auto mr-5 w-1.2 h-1.2 bg-white rounded-full flex-shrink-0" 
+                    />
+                  )}
                 </div>
-                
-                {isActive && isExpanded && (
-                  <motion.div layoutId="active-indicator" className="ml-auto w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
-                )}
               </Link>
             );
           })}
         </nav>
 
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="px-8 py-6 relative z-10"
-            >
-               <div className="bg-slate-50 border border-slate-100 rounded-[24px] p-5 transition-all hover:bg-white hover:shadow-lg hover:shadow-slate-100 group">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2.5 leading-none group-hover:text-blue-600 transition-colors">Resource Allocation</p>
-                  <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
-                     <motion.div initial={{ width: 0 }} animate={{ width: "68%" }} className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                  </div>
-               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Footer/Logout */}
-        <div className="p-3 border-t border-slate-50 relative z-10 overflow-hidden">
+        <div className="p-4 border-t border-[#F1F5F9] relative z-10 overflow-hidden mt-auto">
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center px-[14px] py-4 text-[10px] font-black text-rose-500 hover:bg-rose-50 rounded-xl transition-all uppercase tracking-[0.2em] group min-w-[240px]"
+            className="w-full flex items-center px-2 py-3 rounded-full transition-all group min-w-[240px]"
           >
-             <LogOut size={22} className="group-hover:-translate-x-1 transition-transform flex-shrink-0 mr-6" />
+             <div className="w-10 h-10 bg-[#334155] rounded-full flex items-center justify-center text-white font-black text-xs flex-shrink-0 shadow-lg relative group-hover:scale-110 transition-transform uppercase">
+                <span>{userName?.[0] || role?.[0] || "N"}</span>
+                <div className="absolute -right-0.5 -bottom-0.5 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-sm">
+                   <LogOut size={10} className="text-rose-500" />
+                </div>
+             </div>
+             
              <AnimatePresence>
                {isExpanded && (
                  <motion.span
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
-                    className="whitespace-nowrap"
+                    className="ml-4 text-[9px] font-black text-rose-500 uppercase tracking-[0.2em] whitespace-nowrap"
                  >
                    Terminate Sync
                  </motion.span>
