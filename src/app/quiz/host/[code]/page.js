@@ -29,10 +29,7 @@ export default function AdminHostPage() {
   const [joinCount, setJoinCount] = useState(0);
   const [leaderboard, setLeaderboard] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
-  const [timer, setTimer] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState('lobby');
-  const timerRef = useRef(null);
+  const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
     async function loadHostData() {
@@ -105,16 +102,36 @@ export default function AdminHostPage() {
     setStatus(newStatus);
   };
 
+  const executeCountdown = async (callback) => {
+    setStatus('countdown');
+    await supabase.from("quizzes").update({ status: 'countdown' }).eq("id", quiz.id);
+    
+    let count = 3;
+    setCountdown(count);
+    const interval = setInterval(() => {
+      count -= 1;
+      setCountdown(count);
+      if (count <= 0) {
+        clearInterval(interval);
+        callback();
+      }
+    }, 1000);
+  };
+
   const startQuiz = async () => {
-    await updateQuizStatus('showing-question', 0);
-    startTimer(30);
+    executeCountdown(async () => {
+      await updateQuizStatus('showing-question', 0);
+      startTimer(30);
+    });
   };
 
   const nextQuestion = async () => {
     const nextIdx = quiz.current_question_index + 1;
     if (nextIdx < quiz.questions.length) {
-      await updateQuizStatus('showing-question', nextIdx);
-      startTimer(30);
+      executeCountdown(async () => {
+        await updateQuizStatus('showing-question', nextIdx);
+        startTimer(30);
+      });
     } else {
       await updateQuizStatus('finished');
     }
