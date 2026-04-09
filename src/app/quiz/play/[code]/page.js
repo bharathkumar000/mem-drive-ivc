@@ -78,6 +78,15 @@ export default function CandidatePlayPage() {
             setResultsActive(false);
           }
         )
+        .on(
+          'broadcast',
+          { event: 'state_update' },
+          (payload) => {
+            setQuiz(prev => ({ ...prev, ...payload.payload }));
+            setSelectedOption(null);
+            setResultsActive(false);
+          }
+        )
         .subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
             await channel.track({

@@ -98,6 +98,9 @@ export default function AdminHostPage() {
             });
           });
           setPresentUsers(users);
+          
+          // Re-trigger leaderboard to merge these users
+          if (quizData?.id) fetchLeaderboard(quizData.id);
         })
         .subscribe();
 
@@ -164,8 +167,20 @@ export default function AdminHostPage() {
     if (index !== null) payload.current_question_index = index;
     
     await supabase.from("quizzes").update(payload).eq("id", quiz.id);
+    
+    // BROADCAST PULSE: Instant sync for all nodes
+    const channel = supabase.channel(`quiz_session_${code.toUpperCase()}`);
+    await channel.send({
+      type: 'broadcast',
+      event: 'state_update',
+      payload: { ...quiz, ...payload }
+    });
+
     setQuiz(prev => ({ ...prev, ...payload }));
     setStatus(newStatus);
+    
+    // Refresh leaderboard to catch present users
+    if (quiz?.id) fetchLeaderboard(quiz.id);
   };
 
   const executeCountdown = async (callback) => {
