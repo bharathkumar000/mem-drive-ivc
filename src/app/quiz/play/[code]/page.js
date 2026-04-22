@@ -32,15 +32,11 @@ export default function CandidatePlayPage() {
   const [score, setScore] = useState(0);
 
   useEffect(() => {
+    let channel;
+    
     async function init() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        
-        // Allow mock session for demo
-        const mockSession = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("mock_session="))
-          ?.split("=")[1];
         
         const sessionUser = user || { 
           id: `guest-${Math.random().toString(36).substr(2, 9)}`, 
@@ -63,7 +59,7 @@ export default function CandidatePlayPage() {
         
         setQuiz(quizData);
 
-        // Fetch profile if exists
+        // Fetch profile
         let sessionName = "Candidate";
         if (user) {
           const { data: profile } = await supabase
@@ -76,9 +72,10 @@ export default function CandidatePlayPage() {
           sessionName = `Guest-${sessionUser.id.split('-')[1]}`;
         }
 
-        // Subscribe to changes and presence with BROADCAST SYNC
-        const channel = supabase
-          .channel(`quiz_session_${code.toUpperCase()}`)
+        // Initialize Channel
+        channel = supabase.channel(`quiz_session_${code.toUpperCase()}`);
+        
+        channel
           .on(
             'postgres_changes', 
             { event: '*', schema: 'public', table: 'quizzes', filter: `id=eq.${quizData.id}` },
@@ -110,16 +107,19 @@ export default function CandidatePlayPage() {
           });
 
         setLoading(false);
-
-        return () => {
-          supabase.removeChannel(channel);
-        };
       } catch (err) {
         console.error("CRITICAL SYNC ERROR:", err);
         setLoading(false);
       }
     }
+
     if (code) init();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, [code]);
 
   useEffect(() => {
