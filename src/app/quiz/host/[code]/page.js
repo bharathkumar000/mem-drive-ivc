@@ -78,8 +78,9 @@ export default function AdminHostPage() {
       fetchLeaderboard(quizData.id);
 
       // Subscribe to communications and presence
+      const canal_id = `quiz_session_${code.toUpperCase()}_${Date.now()}`;
       const channel = supabase
-        .channel(`quiz_session_${code.toUpperCase()}`)
+        .channel(canal_id)
         .on(
           'postgres_changes', 
           { event: 'INSERT', schema: 'public', table: 'submissions', filter: `quiz_id=eq.${quizData.id}` },
@@ -90,28 +91,25 @@ export default function AdminHostPage() {
           const count = Object.keys(state).length;
           setJoinCount(count);
 
-          // Extract names from presence state and deduplicate
           const usersMap = {};
           Object.entries(state).forEach(([key, presences]) => {
             presences.forEach(p => {
-               // Super-robust check for identity
               const userId = p.user_id || p.userId || p.id || key;
               const fullName = p.full_name || p.fullName || p.name || p.userName || `Node-${userId.toString().substring(0, 5)}`;
-              
-              if (userId) {
-                usersMap[userId] = fullName;
-              }
+              if (userId) usersMap[userId] = fullName;
             });
           });
           
           const users = Object.entries(usersMap).map(([id, full_name]) => ({ id, full_name }));
-          console.log("PRESENCE SYNC:", { count, users });
           setPresentUsers(users);
-          
-          // Re-trigger leaderboard to merge these users
           if (quizData?.id) fetchLeaderboard(quizData.id, users);
-        })
-        .subscribe();
+        });
+
+      channel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log("NEURAL LINK ESTABLISHED:", canal_id);
+        }
+      });
 
       // HEARTBEAT SYNC: Every 10s broadcast state to ensure mobile nodes catch up
       const heartbeat = setInterval(() => {
@@ -140,7 +138,8 @@ export default function AdminHostPage() {
       .eq("quiz_id", quizId);
       
     if (error) {
-      console.error("LEADERBOARD SYNC ERROR:", error);
+      console.warn("LEADERBOARD SYNC WARNING (Likely missing submissions table):", error.message);
+      setLeaderboard(currentPresentUsers || []);
       return;
     }
 
