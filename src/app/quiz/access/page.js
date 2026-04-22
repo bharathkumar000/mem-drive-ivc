@@ -55,23 +55,23 @@ export default function ProtocolAccessPage() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         whileHover={{ scale: 1.01, transition: { duration: 0.4 } }}
-        className="w-full max-w-[750px] bg-white rounded-[40px] md:rounded-[56px] shadow-[0_60px_100px_-20px_rgba(37,99,235,0.12)] border border-[#f1f5f9] p-8 md:p-16 md:px-24 text-center space-y-10 md:space-y-16 relative overflow-hidden group"
+        className="w-full max-w-[600px] bg-white rounded-[32px] md:rounded-[40px] shadow-[0_50px_90px_-20px_rgba(37,99,235,0.1)] border border-[#f1f5f9] p-8 md:p-12 md:px-16 text-center space-y-8 md:space-y-12 relative overflow-hidden group"
       >
         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-100/50 transition-colors" />
-        <div className="space-y-4 md:space-y-6">
-          <div className="w-16 md:w-20 h-16 md:h-20 bg-blue-50/80 rounded-[28px] md:rounded-[32px] flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-inner">
-            <Lock className="text-primary-blue w-8 md:w-10 h-8 md:h-10" strokeWidth={2.5} />
+        <div className="space-y-3 md:space-y-4">
+          <div className="w-14 md:w-16 h-14 md:h-16 bg-blue-50/80 rounded-[24px] md:rounded-[28px] flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-inner">
+            <Lock className="text-primary-blue w-6 md:w-8 h-6 md:h-8" strokeWidth={2.5} />
           </div>
-          <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-[#0f172a] leading-tight md:leading-none">Protocol <span className="text-primary-blue">Lockdown</span></h1>
-          <p className="text-[10px] md:text-[12px] font-black text-[#94a3b8] uppercase tracking-[0.4em] md:tracking-[0.5em]">Initialize High-Fidelity Session Access</p>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-[#0f172a] leading-tight md:leading-none">Protocol <span className="text-primary-blue">Lockdown</span></h1>
+          <p className="text-[9px] md:text-[10px] font-black text-[#94a3b8] uppercase tracking-[0.4em] md:tracking-[0.5em]">Initialize High-Fidelity Session Access</p>
         </div>
 
         <form onSubmit={handleAccess} className="space-y-8">
-          <div className="space-y-3">
-            <label className="block text-[11px] font-black text-[#94a3b8] uppercase tracking-widest text-left ml-8 italic">Authenticated Node Access Key</label>
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-[#94a3b8] uppercase tracking-widest text-left ml-6 italic">Authenticated Node Access Key</label>
             <div className="relative group/input">
-              <div className="absolute left-8 top-1/2 -translate-y-1/2 text-[#cbd5e1] group-focus-within/input:text-primary-blue transition-colors">
-                 <Fingerprint size={24} />
+              <div className="absolute left-6 top-1/2 -translate-y-1/2 text-[#cbd5e1] group-focus-within/input:text-primary-blue transition-colors">
+                 <Fingerprint size={20} />
               </div>
               <input
                 type="text"
@@ -79,7 +79,7 @@ export default function ProtocolAccessPage() {
                 value={accessCode}
                 onChange={(e) => setAccessCode(e.target.value)}
                 placeholder="EX: NEXUS-AURORA"
-                className="w-full bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-[32px] py-8 pl-20 pr-10 text-base font-black text-[#0f172a] tracking-[0.2em] focus:outline-none focus:border-primary-blue focus:ring-[12px] focus:ring-blue-100/40 transition-all placeholder:text-[#cbd5e1] placeholder:font-bold"
+                className="w-full bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-[24px] py-6 pl-16 pr-8 text-sm font-black text-[#0f172a] tracking-[0.2em] focus:outline-none focus:border-primary-blue focus:ring-[10px] focus:ring-blue-100/40 transition-all placeholder:text-[#cbd5e1] placeholder:font-bold"
               />
             </div>
           </div>
@@ -87,14 +87,14 @@ export default function ProtocolAccessPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#0f172a] text-white py-6 rounded-[32px] font-black text-[13px] tracking-[0.5em] uppercase shadow-[0_20px_40px_-10px_rgba(15,23,42,0.3)] hover:bg-primary-blue hover:shadow-primary-blue/30 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-5 group/btn"
+            className="w-full bg-[#0f172a] text-white py-3.5 rounded-[20px] font-black text-[10px] tracking-[0.3em] uppercase shadow-[0_15px_30px_-10px_rgba(15,23,42,0.25)] hover:bg-primary-blue hover:shadow-primary-blue/30 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 group/btn"
           >
             {loading ? (
-              <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
             ) : (
               <>
-                <span className="group-hover/btn:tracking-[0.6em] transition-all">Establish Link</span>
-                <Zap size={22} className="text-primary-blue group-hover/btn:text-white group-hover/btn:scale-125 transition-all" />
+                 <span className="group-hover/btn:tracking-[0.5em] transition-all">Establish Link</span>
+                <Zap size={18} className="text-primary-blue group-hover/btn:text-white group-hover/btn:scale-125 transition-all" />
               </>
             )}
           </button>
