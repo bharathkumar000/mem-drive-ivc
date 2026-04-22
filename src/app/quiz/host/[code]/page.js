@@ -92,19 +92,24 @@ export default function AdminHostPage() {
 
           // Extract names from presence state and deduplicate
           const usersMap = {};
-          Object.values(state).forEach(presences => {
+          Object.entries(state).forEach(([key, presences]) => {
             presences.forEach(p => {
-              if (p.user_id) {
-                // Use full_name if available, otherwise fallback to ID fragment
-                usersMap[p.user_id] = p.full_name || `Node-${p.user_id.substring(0, 5)}`;
+               // Super-robust check for identity
+              const userId = p.user_id || p.userId || p.id || key;
+              const fullName = p.full_name || p.fullName || p.name || p.userName || `Node-${userId.toString().substring(0, 5)}`;
+              
+              if (userId) {
+                usersMap[userId] = fullName;
               }
             });
           });
+          
           const users = Object.entries(usersMap).map(([id, full_name]) => ({ id, full_name }));
+          console.log("PRESENCE SYNC:", { count, users });
           setPresentUsers(users);
           
           // Re-trigger leaderboard to merge these users
-          if (quizData?.id) fetchLeaderboard(quizData.id);
+          if (quizData?.id) fetchLeaderboard(quizData.id, users);
         })
         .subscribe();
 
@@ -128,7 +133,7 @@ export default function AdminHostPage() {
     loadHostData();
   }, [code]);
 
-  async function fetchLeaderboard(quizId) {
+  async function fetchLeaderboard(quizId, currentPresentUsers = null) {
     const { data, error } = await supabase
       .from("submissions")
       .select("user_id, total_score, profiles!user_id(full_name)")
@@ -138,6 +143,9 @@ export default function AdminHostPage() {
       console.error("LEADERBOARD SYNC ERROR:", error);
       return;
     }
+
+    console.log("SUBMISSIONS DATA:", data?.length || 0, "records");
+
 
     // Aggregate scores by user ID
     const totals = (data || []).reduce((acc, curr) => {
@@ -157,8 +165,11 @@ export default function AdminHostPage() {
     const scoredUsers = Object.values(totals);
     
     // Merge with present users who have no scores yet
+    // Use the passed in users if available, otherwise fallback to state
+    const usersToMerge = currentPresentUsers || presentUsers;
     const allUsers = [...scoredUsers];
-    presentUsers.forEach(pu => {
+    
+    usersToMerge.forEach(pu => {
       if (!allUsers.some(u => u.id === pu.id)) {
         allUsers.push({ id: pu.id, full_name: pu.full_name, total_score: 0 });
       }
@@ -317,11 +328,11 @@ export default function AdminHostPage() {
                     className="space-y-12 text-center"
                   >
                      <div className="space-y-4">
-                        <div className="p-8 w-fit mx-auto bg-primary-blue/10 rounded-[60px] border border-primary-blue/20 mb-8 animate-pulse">
-                           <Users size={120} className="text-primary-blue" />
+                        <div className="p-6 w-fit mx-auto bg-primary-blue/10 rounded-[40px] border border-primary-blue/20 mb-4 animate-pulse">
+                           <Users size={80} className="text-primary-blue" />
                         </div>
-                        <h1 className="text-8xl font-black tracking-tighter uppercase leading-none">JOIN THE NODE</h1>
-                        <p className="text-[16.5px] font-black text-white/40 uppercase tracking-[0.6em]">Scanning for synchronized candidate signals</p>
+                        <h1 className="text-6xl md:text-7xl font-black tracking-tighter uppercase leading-none">JOIN THE NODE</h1>
+                        <p className="text-sm font-black text-white/40 uppercase tracking-[0.6em]">Scanning for synchronized candidate signals</p>
                      </div>
 
                      <div className="flex flex-wrap justify-center gap-3 px-20">
@@ -341,9 +352,9 @@ export default function AdminHostPage() {
                         )}
                      </div>
 
-                     <div className="bg-white text-[#0F172A] p-12 rounded-[56px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] flex flex-col gap-4">
-                        <span className="text-[15px] font-black uppercase tracking-[0.4em] opacity-40">Protocol Access Key</span>
-                        <span className="text-9xl font-black tracking-widest leading-none">{code}</span>
+                     <div className="bg-white text-[#0F172A] p-8 rounded-[40px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] flex flex-col gap-2 max-w-md mx-auto w-full">
+                        <span className="text-xs font-black uppercase tracking-[0.4em] opacity-40">Protocol Access Key</span>
+                        <span className="text-7xl font-black tracking-widest leading-none">{code}</span>
                      </div>
 
                      <button 
