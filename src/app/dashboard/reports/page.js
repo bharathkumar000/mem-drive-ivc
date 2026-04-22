@@ -343,7 +343,6 @@ export default function ReportsPage() {
                 <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.3em] ml-4">Overview</label>
                 <textarea
                   value={overview}
-                  value={overview}
                   onPaste={(e) => handlePaste(e, setOverview, overview)}
                   onChange={(e) => setOverview(e.target.value)}
                   placeholder="Provide a brief overview of your findings..."
@@ -354,7 +353,6 @@ export default function ReportsPage() {
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.3em] ml-4">Applications in Real World</label>
                 <textarea
-                  value={applications}
                   value={applications}
                   onPaste={(e) => handlePaste(e, setApplications, applications)}
                   onChange={(e) => setApplications(e.target.value)}
@@ -368,7 +366,6 @@ export default function ReportsPage() {
                   <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.3em] ml-4">Your thoughts</label>
                   <textarea
                     value={thoughts}
-                    value={thoughts}
                     onPaste={(e) => handlePaste(e, setThoughts, thoughts)}
                     onChange={(e) => setThoughts(e.target.value)}
                     placeholder="Share your personal analysis..."
@@ -378,7 +375,6 @@ export default function ReportsPage() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.3em] ml-4">Future improvements</label>
                   <textarea
-                    value={improvements}
                     value={improvements}
                     onPaste={(e) => handlePaste(e, setImprovements, improvements)}
                     onChange={(e) => setImprovements(e.target.value)}
