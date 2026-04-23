@@ -200,11 +200,13 @@ export default function CandidatePlayPage() {
   const [startTime, setStartTime] = useState(null);
   const [showOptions, setShowOptions] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
 
    useEffect(() => {
     if (quiz?.status === 'showing-question') {
       setSelectedOption(null); // Critical: Reset selection for new question
       setIsSubmitting(false);
+      setIsLocked(false);
       setShowOptions(false);
       const timer = setTimeout(() => {
         setShowOptions(true);
@@ -216,22 +218,29 @@ export default function CandidatePlayPage() {
     }
   }, [quiz?.status, quiz?.current_question_index]);
 
-  const handleSelect = async (optionIndex) => {
-    if (quiz?.status !== 'showing-question' || !currentQuestion) return;
+  const handleSelect = (optionIndex) => {
+    if (quiz?.status !== 'showing-question' || !currentQuestion || isLocked) return;
     
-    // Optimistic UI Update
+    // Instant visual feedback for selection (unlimited changes until locked)
     setSelectedOption(optionIndex);
+  };
+
+  const handleLockResponse = async () => {
+    if (selectedOption === null || isLocked || quiz?.status !== 'showing-question') return;
     
-    const elapsed = (Date.now() - startTime) / 1000;
-    const answer = String.fromCharCode(65 + optionIndex);
+    setIsSubmitting(true);
+    const lockTime = Date.now();
+    const elapsed = (lockTime - startTime) / 1000;
+    
+    const answer = String.fromCharCode(65 + selectedOption);
     const isCorrect = answer === currentQuestion.correct_answer;
     
-    // Tiered Scoring Logic (0-3s: 100, 3-6s: 95, 6-9s: 90, etc.)
+    // Tiered Scoring Logic (based on when the LOCK button was clicked)
     const pointsTier = Math.floor(elapsed / 3);
     const pointsEarned = isCorrect ? Math.max(10, 100 - (pointsTier * 5)) : 0;
     
     try {
-      // Use UPSERT logic via delete-insert pattern for robustness across all sessions
+      // 1. Clear any previous stale submissions
       await supabase
         .from('submissions')
         .delete()
@@ -241,7 +250,8 @@ export default function CandidatePlayPage() {
           question_id: currentQuestion.id 
         });
 
-      await supabase.from('submissions').insert([{
+      // 2. Lock the response in Supabase
+      const { error } = await supabase.from('submissions').insert([{
         quiz_id: quiz.id,
         user_id: user.id,
         question_id: currentQuestion.id,
@@ -250,8 +260,14 @@ export default function CandidatePlayPage() {
         points: pointsEarned,
         time_taken: elapsed
       }]);
+
+      if (!error) {
+        setIsLocked(true);
+      }
     } catch (err) {
-      console.error("Selection sync failed:", err);
+      console.error("Lock sequence failed:", err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -412,6 +428,41 @@ export default function CandidatePlayPage() {
                          </motion.button>
                        );
                      })}
+                      {selectedOption !== null && !isLocked && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="col-span-full pt-4"
+                        >
+                           <button
+                             onClick={handleLockResponse}
+                             disabled={isSubmitting}
+                             className="w-full py-6 bg-[#0F172A] text-white rounded-[32px] font-black text-lg uppercase tracking-[0.3em] shadow-2xl flex items-center justify-center gap-4 group active:scale-95 transition-all"
+                           >
+                              {isSubmitting ? (
+                                <div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+                              ) : (
+                                <>
+                                  <Zap className="text-primary-blue group-hover:animate-pulse" />
+                                  <span>LOCK RESPONSE</span>
+                                </>
+                              )}
+                           </button>
+                        </motion.div>
+                      )}
+
+                      {isLocked && (
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="col-span-full pt-4"
+                        >
+                           <div className="w-full py-6 bg-emerald-500 text-white rounded-[32px] font-black text-lg uppercase tracking-[0.3em] shadow-xl flex items-center justify-center gap-4">
+                              <CircleCheck className="text-white" />
+                              <span>RESPONSE LOCKED</span>
+                           </div>
+                        </motion.div>
+                      )}
                  </>
               ) : quiz?.status === 'showing-question' ? (
                 <div className="col-span-full bg-white/50 backdrop-blur-sm rounded-[32px] border-2 border-dashed border-primary-blue/10 flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
