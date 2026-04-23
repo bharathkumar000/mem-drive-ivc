@@ -39,36 +39,6 @@ export default function AdminDashboard() {
   const supabase = createClient();
 
   useEffect(() => {
-    async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
-      const mockSession = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("mock_session="))
-        ?.split("=")[1];
-      
-      const isMockAdmin = mockSession === "admin";
-      
-      if (!user && !isMockAdmin) {
-        router.push("/login");
-        return;
-      }
-
-      if (user && !isMockAdmin) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-        
-        if (profile?.role !== "admin") {
-          router.push("/");
-          return;
-        }
-      }
-      
-      loadData();
-    }
-
     async function loadData() {
       // Fetch Submissions
       const { data: subData } = await supabase
@@ -98,15 +68,14 @@ export default function AdminDashboard() {
       // Calculate Stats
       const totalSubmissions = subData?.length || 0;
       const flaggedCount = subData?.filter(s => s.flagged).length || 0;
-      const avgScore = subData?.length ? (subData.reduce((acc, s) => acc + (s.total_score || 0), 0) / subData.length).toFixed(1) : 0;
 
       setRealStats({
         totalSessions: totalSubmissions,
-        platformPulse: totalSubmissions > 0 ? "98.2%" : "0%", // Analytical mock if not enough data
+        platformPulse: totalSubmissions > 0 ? "98.2%" : "0%",
         activeQuizzes: quizCount || 0,
         avgCompletion: totalSubmissions > 0 ? `${((totalSubmissions / (quizCount || 1)) * 10).toFixed(0)}%` : "0%",
         securityFlags: flaggedCount,
-        timeOptimized: "4h 12m" // Requires movement tracking
+        timeOptimized: "4h 12m"
       });
 
       setSubmissions(subData || []);
@@ -114,7 +83,7 @@ export default function AdminDashboard() {
       setTeamUtilization(userData || []);
       setLoading(false);
     }
-    checkAuth();
+    loadData();
   }, []);
 
   const statsDisplay = [
@@ -128,8 +97,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex flex-col p-8 md:p-14 space-y-10">
-      {/* Header */}
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 md:gap-0">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-2xl md:text-3xl font-black text-[#0F172A] tracking-tighter uppercase">Dashboard Overview</h1>
@@ -144,7 +111,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-        {/* 6-Column Stats Grid - Responsive scaling */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-6">
           {statsDisplay.map((stat, i) => (
             <motion.div
@@ -165,7 +131,6 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Leaderboard Section */}
         <div className="bg-white p-6 md:p-10 rounded-[40px] md:rounded-[48px] border border-[#E2E8F0] shadow-[0_20px_50px_-20px_rgba(37,99,235,0.08)] space-y-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-gray-50 pb-6 gap-4 sm:gap-0">
             <div className="flex items-center gap-3">
@@ -229,9 +194,7 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Two-Column Bottom Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
-          {/* Platform Flow Card */}
           <div className="dashboard-card space-y-8 border-[#E2E8F0] shadow-xl">
             <div className="flex items-center justify-between border-b pb-6">
               <div className="flex items-center gap-3">
@@ -262,7 +225,6 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Team Utilization Card */}
           <div className="dashboard-card space-y-8 border-[#E2E8F0] shadow-xl">
             <div className="flex items-center justify-between border-b pb-6">
               <div className="flex items-center gap-3">
@@ -271,7 +233,10 @@ export default function AdminDashboard() {
                 </div>
                 <h3 className="text-lg font-black text-[#0F172A] uppercase tracking-tight">Managed Nodes</h3>
               </div>
-              <button className="text-[10px] font-black text-[#2563EB] uppercase tracking-widest hover:underline flex items-center gap-1">
+              <button 
+                onClick={() => router.push('/quiz/admin/users')}
+                className="text-[10px] font-black text-[#2563EB] uppercase tracking-widest hover:underline flex items-center gap-1"
+              >
                 View Registry <ChevronRight size={12} strokeWidth={3} />
               </button>
             </div>
