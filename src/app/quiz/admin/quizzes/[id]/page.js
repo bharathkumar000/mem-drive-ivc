@@ -60,6 +60,28 @@ export default function QuizConfigurePage({ params }) {
 
   useEffect(() => {
     loadData();
+
+    // Real-time listener for new submissions to update leaderboard automatically
+    const channel = supabase
+      .channel(`admin_quiz_sync_${id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'submissions', filter: `quiz_id=eq.${id}` },
+        () => {
+          fetchLeaderboardData(id);
+          // Also update the simple count
+          supabase
+            .from("submissions")
+            .select("*", { count: "exact", head: true })
+            .eq("quiz_id", id)
+            .then(({ count }) => setParticipantsCount(count || 0));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [id]);
 
   const loadData = async () => {
@@ -89,6 +111,7 @@ export default function QuizConfigurePage({ params }) {
       .order("order_index", { ascending: true });
     
     if (qErr) console.error("Question retrieval error:", qErr);
+
     setQuestions(questionData || []);
     setLoading(false);
   };

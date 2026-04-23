@@ -215,12 +215,12 @@ export default function CandidatePlayPage() {
   }, [quiz?.status, quiz?.current_question_index]);
 
   const handleSelect = async (optionIndex) => {
-    if (quiz?.status !== 'showing-question' || !currentQuestion || isSubmitting) return;
+    if (quiz?.status !== 'showing-question' || !currentQuestion) return;
     
-    setIsSubmitting(true);
-    const elapsed = (Date.now() - startTime) / 1000;
+    // Instant visual feedback - no more isSubmitting lock here
     setSelectedOption(optionIndex);
     
+    const elapsed = (Date.now() - startTime) / 1000;
     const answer = String.fromCharCode(65 + optionIndex); // A, B, C, D
     const isCorrect = answer === currentQuestion.correct_answer;
     
@@ -230,12 +230,17 @@ export default function CandidatePlayPage() {
     const penalty = Math.floor(elapsed);
     const pointsEarned = isCorrect ? Math.max(10, basePoints - (penalty * 10)) : 0;
     
+    setIsSubmitting(true);
     try {
       // 1. Clear any previous submission for this question to allow re-selection
       await supabase
         .from('submissions')
         .delete()
-        .match({ quiz_id: quiz.id, user_id: user.id, question_id: currentQuestion.id });
+        .match({ 
+          quiz_id: quiz.id, 
+          user_id: user.id, 
+          question_id: currentQuestion.id 
+        });
 
       // 2. Save new answer to Supabase
       await supabase.from('submissions').insert([{
@@ -385,7 +390,7 @@ export default function CandidatePlayPage() {
                            initial={{ opacity: 0, scale: 0.95 }}
                            animate={{ opacity: 1, scale: 1 }}
                            whileTap={{ scale: 0.97 }}
-                           disabled={isSubmitting}
+                           
                            onClick={() => handleSelect(idx)}
                            className={`relative rounded-[28px] md:rounded-[32px] flex flex-col items-center justify-center text-white transition-all overflow-hidden p-6 text-center group/opt cursor-pointer touch-manipulation z-40 ${
                              selectedOption === idx ? 'ring-4 ring-white/50 shadow-2xl' : 

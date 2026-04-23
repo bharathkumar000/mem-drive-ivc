@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,8 +46,14 @@ export default function AdminHostPage() {
   const [refreshing, setRefreshing] = useState(false);
   const timerRef = useRef(null);
   const channelRef = useRef(null);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [countdown, setCountdown] = useState(0);
+  const [status, setStatus] = useState('lobby');
+  const [loading, setLoading] = useState(true);
+  const [activeRegistryTab, setActiveRegistryTab] = useState('leaderboard');
   const [violations, setViolations] = useState([]);
   const [showResultsModal, setShowResultsModal] = useState(false);
+  const presentUsersRef = useRef([]);
 
   const currentQuestion = useMemo(() => {
     if (!quiz?.questions || quiz.current_question_index === undefined) return null;
@@ -60,7 +66,7 @@ export default function AdminHostPage() {
       .select("user_id, points, profiles!user_id(full_name)")
       .eq("quiz_id", quizId);
 
-    const usersToMerge = currentPresentUsers || presentUsers;
+    const usersToMerge = currentPresentUsers || presentUsersRef.current;
     const presentIds = usersToMerge.map(u => u.id).filter(id => id && !id.startsWith('guest-') && !id.startsWith('mock_'));
     
     let profilesData = [];
@@ -102,7 +108,7 @@ export default function AdminHostPage() {
     }).sort((a, b) => b.total_score - a.total_score);
 
     setLeaderboard(finalData);
-  }, [presentUsers, supabase]);
+  }, [supabase]);
 
   useEffect(() => {
     if (status === 'showing-question') {
@@ -179,6 +185,7 @@ export default function AdminHostPage() {
           
           const users = Object.entries(usersMap).map(([id, full_name]) => ({ id, full_name }));
           setPresentUsers(users);
+          presentUsersRef.current = users;
           
           // Debounce/Throttle leaderboard fetch on presence sync to avoid hammering Supabase
           if (quizData?.id) {
@@ -240,10 +247,26 @@ export default function AdminHostPage() {
     }
     loadHostData();
 
+    const handleUnload = (e) => {
+      if (quizRef.current?.id && quizRef.current?.status !== 'finished') {
+         // navigator.sendBeacon is more reliable for unload events
+         const payload = JSON.stringify({ status: 'finished' });
+         // We can't easily use supabase client in synchronous unload, but we can attempt a fire-and-forget
+         supabase.from("quizzes").update({ status: 'finished' }).eq("id", quizRef.current.id).then();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+
     return () => {
       active = false;
+      if (quizRef.current?.id && quizRef.current?.status !== 'finished') {
+        // Fallback for component unmount (e.g. Next.js router back button)
+        supabase.from("quizzes").update({ status: 'finished' }).eq("id", quizRef.current.id).then();
+      }
+      window.removeEventListener('beforeunload', handleUnload);
     };
-  }, [code, fetchLeaderboard, supabase]);
+  }, [code, supabase]);
 
   // currentQuestion is now derived via useMemo above for better sync
 
@@ -295,6 +318,13 @@ export default function AdminHostPage() {
     await supabase.from("submissions").delete().eq("quiz_id", quiz.id);
     setLeaderboard([]);
     await updateQuizStatus('lobby', 0);
+  };
+
+  const terminateSession = async () => {
+    if (quiz?.id && status !== 'finished') {
+      await updateQuizStatus('finished');
+    }
+    router.push('/quiz/admin');
   };
 
   const recalibrateNode = useCallback(async () => {
@@ -470,7 +500,7 @@ export default function AdminHostPage() {
           <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 w-full">
              <div className="flex items-center gap-4">
                 <button 
-                  onClick={() => router.push('/quiz/admin')}
+                  onClick={terminateSession}
                   className="p-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all group mr-2"
                 >
                   <ArrowLeft className="w-4 h-4 text-white/60 group-hover:text-white transition-colors" />
@@ -551,7 +581,9 @@ export default function AdminHostPage() {
                           <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Neural handshake in progress...</p>
                        </div>
                     </motion.div>
-                           {status === 'showing-question' && (
+                 )}
+
+                  {status === 'showing-question' && (
                    <motion.div
                      key="question"
                      initial={{ opacity: 0, y: 20 }}
@@ -636,6 +668,7 @@ export default function AdminHostPage() {
                           )}
                         </>
                       )}
+                    </motion.div>
                  )}
 
                 {status === 'showing-results' && currentQuestion && (
