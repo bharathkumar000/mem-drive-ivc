@@ -40,9 +40,16 @@ export default function AuthPage() {
     setError(null);
 
     if (mode === "login") {
+      // Demo Credentials Check
       if (email === "1" && password === "1") {
         document.cookie = "mock_session=user:1; path=/";
         router.push("/dashboard");
+        return;
+      }
+
+      if (email === "2" && password === "2") {
+        document.cookie = "mock_session=admin:2; path=/";
+        router.push("/quiz/admin");
         return;
       }
 
@@ -142,13 +149,13 @@ export default function AuthPage() {
               )}
 
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black text-[#64748B] uppercase tracking-widest pl-1">Email Address</label>
+                <label className="text-[9px] font-black text-[#64748B] uppercase tracking-widest pl-1">Node Identity / Email</label>
                 <input
-                  type="email"
+                  type="text"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
+                  placeholder="name@company.com or ID"
                   className="w-full bg-[#F8FAFC] border border-[#E8EDF2] rounded-inner px-4 py-3 text-sm font-bold text-[#0F172A] focus:outline-none focus:border-primary-blue transition-all"
                 />
               </div>

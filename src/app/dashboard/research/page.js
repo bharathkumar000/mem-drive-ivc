@@ -33,13 +33,27 @@ export default function ResearchPage() {
 
   const textareaRef = useRef(null);
 
-  const TARGET_CHARS = 10000;
-  const PASTE_LIMIT = 100;
+  const DEFAULT_TOPIC = "ADVANCED RESEARCH & SYNTHESIS PROTOCOL";
+  const PASTE_LIMIT = 50000;
+
+  const RESEARCH_BLOCKS = [
+    { id: 'overview', label: 'Research Overview', min: 10000, placeholder: 'Provide a comprehensive overview of your research findings...' },
+    { id: 'gaps', label: 'Gaps & Limitations', min: 6000, placeholder: 'Identify critical gaps and technical limitations in current implementations...' },
+    { id: 'application', label: 'Real-world Application', min: 6000, placeholder: 'Describe how this research translates to tactical or industrial applications...' },
+    { id: 'future', label: 'Future Enhancements', min: 6000, placeholder: 'Outline potential future developments and scalability vectors...' }
+  ];
+
+  const [researchData, setResearchData] = useState({
+    overview: "",
+    gaps: "",
+    application: "",
+    future: ""
+  });
 
   useEffect(() => {
     async function loadProfile() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
         router.push("/auth");
         return;
       }
@@ -47,52 +61,54 @@ export default function ResearchPage() {
       const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", authUser.id)
         .single();
 
-      setProfile(profileData);
+      setProfile(profileData || { id: authUser.id, round2_topic: DEFAULT_TOPIC });
       if (profileData?.round2_content) {
-        setResearchContent(profileData.round2_content);
+        try {
+          const parsed = typeof profileData.round2_content === 'string' 
+            ? JSON.parse(profileData.round2_content) 
+            : profileData.round2_content;
+          setResearchData(prev => ({ ...prev, ...parsed }));
+        } catch (e) {
+          setResearchData(prev => ({ ...prev, overview: profileData.round2_content }));
+        }
       }
       setLoading(false);
     }
     loadProfile();
   }, []);
 
-  const handleContentChange = (e) => {
-    const val = e.target.value;
-    if (val.length <= TARGET_CHARS + 500) { // Small buffer
-      setResearchContent(val);
+  const handleFieldChange = (id, value) => {
+    // Detect whitespace violation
+    if (/\s{6,}/.test(value)) {
+      setError("SYSTEM ALERT: YOU CANNOT ENTER MORE THAN FIVE SPACES SIMULTANEOUSLY.");
+      setTimeout(() => setError(null), 3000);
+      
+      // Sanitize and continue
+      const sanitizedValue = value.replace(/\s{6,}/g, (match) => match.slice(0, 5));
+      setResearchData(prev => ({ ...prev, [id]: sanitizedValue }));
+      return;
     }
+    
+    setResearchData(prev => ({ ...prev, [id]: value }));
   };
 
   const handlePaste = (e) => {
     const pastedText = e.clipboardData.getData("text");
     if (pastedText.length > PASTE_LIMIT) {
-      e.preventDefault();
-      setError(`PASTE RESTRICTION: You cannot paste more than ${PASTE_LIMIT} characters at once. Please type or paste in smaller segments.`);
-      setTimeout(() => setError(null), 5000);
-      
-      // Optionally allow the first PASTE_LIMIT characters
-      const truncated = pastedText.substring(0, PASTE_LIMIT);
-      const start = e.target.selectionStart;
-      const end = e.target.selectionEnd;
-      const text = researchContent;
-      const newText = text.substring(0, start) + truncated + text.substring(end);
-      setResearchContent(newText);
-      
-      // Update cursor position after state update
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + truncated.length;
-        }
-      }, 0);
+       e.preventDefault();
+       setError(`SYSTEM ALERT: Paste volume exceeded safety buffer.`);
+       setTimeout(() => setError(null), 3000);
     }
   };
 
   const handleSubmit = async () => {
-    if (researchContent.length < TARGET_CHARS * 0.95) { // Allow 5% margin
-      setError(`INCOMPLETE PROTOCOL: You must provide at least 10,000 characters of secondary research. Current count: ${researchContent.length}`);
+    const missing = RESEARCH_BLOCKS.filter(block => researchData[block.id].length < block.min);
+    
+    if (missing.length > 0) {
+      setError(`INCOMPLETE PROTOCOL: The following blocks do not meet requirements: ${missing.map(m => m.label).join(', ')}`);
       return;
     }
 
@@ -100,8 +116,9 @@ export default function ResearchPage() {
     const { error: updateError } = await supabase
       .from("profiles")
       .update({ 
-        round2_content: researchContent,
-        round2_status: 'submitted'
+        round2_content: researchData,
+        round2_status: 'submitted',
+        round2_topic: profile?.round2_topic || DEFAULT_TOPIC
       })
       .eq("id", profile.id);
 
@@ -120,30 +137,7 @@ export default function ResearchPage() {
     </div>
   );
 
-  if (!profile?.round2_topic) {
-    return (
-      <div className="p-8 md:p-14 flex flex-col items-center justify-center min-h-[70vh] text-center space-y-6">
-        <div className="w-20 h-20 bg-amber-50 rounded-[32px] flex items-center justify-center text-amber-500 border border-amber-100 shadow-xl shadow-amber-500/5">
-          <Info size={32} />
-        </div>
-        <div>
-          <h2 className="text-3xl font-black text-[#0F172A] uppercase tracking-tighter">Round 2 Pending</h2>
-          <p className="text-[11px] font-black text-[#94A3B8] uppercase tracking-[0.4em] mt-2 max-w-md mx-auto">
-            You have not been assigned a research topic yet. Please await authorization from the control center.
-          </p>
-        </div>
-        <button 
-          onClick={() => router.push("/dashboard")}
-          className="bg-[#0F172A] text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all active:scale-95 flex items-center gap-3"
-        >
-          <LayoutDashboard size={16} />
-          <span>Return to Hub</span>
-        </button>
-      </div>
-    );
-  }
-
-  const progress = Math.min((researchContent.length / TARGET_CHARS) * 100, 100);
+  const isProtocolComplete = RESEARCH_BLOCKS.every(block => researchData[block.id].length >= block.min);
 
   return (
     <div className="p-8 md:p-14 space-y-10">
@@ -153,53 +147,130 @@ export default function ResearchPage() {
              <div className="px-4 py-1.5 bg-blue-50 text-[#2563EB] rounded-full text-[10px] font-black uppercase tracking-[0.3em] border border-blue-100 shadow-sm">
                Phase II Protocol
              </div>
-             {profile.round2_status === 'submitted' && (
+             {profile?.round2_status === 'submitted' && (
                 <div className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-[0.3em] border border-emerald-100 shadow-sm flex items-center gap-2">
-                  <CheckCircle2 size={12} />
-                  <span>SYNCED</span>
+                   <CheckCircle2 size={12} />
+                   <span>SYNCED</span>
                 </div>
              )}
           </div>
-          <h1 className="text-5xl font-black text-[#0F172A] tracking-tighter uppercase leading-none max-w-2xl">
-            {profile.round2_topic}
+          <h1 className="text-5xl font-black text-[#0F172A] uppercase leading-none max-w-2xl">
+            SECONDARY RESEARCH
           </h1>
-          <p className="text-[11px] font-black text-[#94A3B8] uppercase tracking-[0.4em] mt-2">
-            SECONDARY RESEARCH & SYNTHESIS MODULE
-          </p>
+          <div className="flex flex-col gap-2">
+             <span className="text-[9px] font-black text-[#94A3B8] uppercase tracking-[0.4em]">ALLOCATED TOPIC</span>
+             <h2 className="text-xl font-bold text-[#2563EB] leading-tight max-w-3xl">
+               {profile?.round2_topic || "Why is this not soo good"}
+             </h2>
+          </div>
         </div>
 
         <div className="flex items-center gap-6">
            <div className="bg-white border border-[#E2E8F0] px-8 py-4 rounded-[24px] shadow-sm flex flex-col items-center min-w-[140px]">
-              <span className="text-[9px] font-black text-[#94A3B8] uppercase tracking-widest mb-1">Characters</span>
-              <span className="text-2xl font-black text-[#0F172A] tabular-nums">{researchContent.length.toLocaleString()}</span>
+              <span className="text-[9px] font-black text-[#94A3B8] uppercase tracking-widest mb-1">Total Progress</span>
+              <span className="text-2xl font-black text-[#0F172A] tabular-nums">{Math.floor((totalChars / requiredChars) * 100)}%</span>
            </div>
            <div className="bg-[#0F172A] text-white px-8 py-4 rounded-[24px] shadow-2xl flex flex-col items-center min-w-[140px]">
-              <span className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Requirement</span>
-              <span className="text-2xl font-black tabular-nums">{TARGET_CHARS.toLocaleString()}</span>
+              <span className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Target Aggregate</span>
+              <span className="text-2xl font-black tabular-nums">{requiredChars.toLocaleString()}</span>
            </div>
         </div>
       </header>
 
-      <main className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10">
-        <div className="space-y-6">
-          <div className="relative group">
-            <textarea
-              ref={textareaRef}
-              value={researchContent}
-              onChange={handleContentChange}
-              onPaste={handlePaste}
-              disabled={profile.round2_status === 'submitted' || success}
-              placeholder="Begin your detailed research synthesis here... (Minimum 10,000 characters required)"
-              className="w-full bg-white border-2 border-[#F1F5F9] rounded-[32px] p-10 min-h-[600px] text-lg font-medium leading-relaxed focus:outline-none focus:border-[#2563EB]/30 focus:ring-4 focus:ring-blue-50 transition-all placeholder:text-[#CBD5E1] shadow-sm selection:bg-blue-100 resize-none"
-            />
-            
-            {/* Progress Overlay */}
-            <div className="absolute bottom-6 left-6 right-6 h-2 bg-slate-100 rounded-full overflow-hidden border border-white">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                className={`h-full rounded-full ${progress === 100 ? "bg-emerald-500" : "bg-[#2563EB]"}`}
-              />
+      <main className="max-w-5xl mx-auto space-y-12 pb-20">
+        <div className="space-y-12">
+          {/* Colourfull Rules of Engagement - Horizontal Layout */}
+          <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-6 rounded-[32px] grid grid-cols-1 md:grid-cols-4 gap-6 shadow-sm">
+            {[
+              { icon: Zap, text: "Aggregate target: 28,000 characters.", color: "text-amber-500", bg: "bg-amber-50", border: "border-amber-100" },
+              { icon: BookOpen, text: "Overview block: 10,000 character minimum.", color: "text-blue-500", bg: "bg-blue-50", border: "border-blue-100" },
+              { icon: Copy, text: "Limitations, Apps, Future: 6,000 chars each.", color: "text-indigo-500", bg: "bg-indigo-50", border: "border-indigo-100" },
+              { icon: Clock, text: "Commit once all protocols are green.", color: "text-emerald-500", bg: "bg-emerald-50", border: "border-emerald-100" }
+            ].map((rule, i) => (
+              <div key={i} className="flex items-center gap-4 group transition-all hover:scale-[1.02]">
+                <div className={`w-10 h-10 ${rule.bg} border ${rule.border} rounded-xl flex-shrink-0 flex items-center justify-center ${rule.color} shadow-sm transition-transform group-hover:rotate-6`}>
+                  <rule.icon size={16} />
+                </div>
+                <span className="text-[10px] font-black text-[#64748B] uppercase tracking-wide leading-tight group-hover:text-[#0F172A] transition-colors">{rule.text}</span>
+              </div>
+            ))}
+          </div>
+
+          {RESEARCH_BLOCKS.map((block) => (
+            <div key={block.id} className="space-y-4">
+               <div className="flex justify-between items-end px-2">
+                  <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[#0F172A]">{block.label}</h3>
+                  <div className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+                     <span className={researchData[block.id].length >= block.min ? "text-emerald-500" : "text-amber-500"}>
+                        {researchData[block.id].length.toLocaleString()}
+                     </span>
+                     <span className="text-slate-300">/</span>
+                     <span className="text-slate-400">{block.min.toLocaleString()} MIN</span>
+                  </div>
+               </div>
+               <div className="relative group">
+                  <textarea
+                    value={researchData[block.id]}
+                    onChange={(e) => handleFieldChange(block.id, e.target.value)}
+                    onPaste={handlePaste}
+                    disabled={profile?.round2_status === 'submitted' || success}
+                    placeholder={block.placeholder}
+                    className="w-full bg-white border-2 border-[#F1F5F9] rounded-[24px] p-8 min-h-[300px] text-lg font-medium leading-relaxed focus:outline-none focus:border-[#2563EB]/30 focus:ring-4 focus:ring-blue-50 transition-all placeholder:text-[#CBD5E1] shadow-sm selection:bg-blue-100 resize-none"
+                  />
+                  <div className="absolute bottom-4 left-6 right-6 h-1 bg-slate-50 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min((researchData[block.id].length / block.min) * 100, 100)}%` }}
+                      className={`h-full rounded-full ${researchData[block.id].length >= block.min ? "bg-emerald-500" : "bg-[#2563EB]"}`}
+                    />
+                  </div>
+               </div>
+            </div>
+          ))}
+
+          {/* Minimized Action Node - Bottom Layout */}
+          <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-6 rounded-[32px] space-y-6 mt-12 max-w-lg mx-auto text-center shadow-sm">
+            <div className="flex items-center justify-center gap-4">
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-[#2563EB] border border-blue-100">
+                <ShieldCheck size={20} />
+              </div>
+              <div className="text-left">
+                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#0F172A]">Action Node</h4>
+                <p className="text-[9px] font-black text-[#94A3B8] uppercase tracking-widest">Protocol Finalization Unit</p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-[#E2E8F0]">
+              <button
+                onClick={handleSubmit}
+                disabled={submitting || profile?.round2_status === 'submitted' || success || !isProtocolComplete}
+                className={`w-full py-4 rounded-xl font-black text-[10px] tracking-[0.3em] uppercase transition-all flex items-center justify-center gap-3 shadow-lg active:scale-95 ${
+                  profile?.round2_status === 'submitted' || success
+                  ? "bg-emerald-500 text-white cursor-not-allowed"
+                  : !isProtocolComplete
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
+                  : "bg-[#2563EB] text-white hover:bg-blue-600 shadow-blue-200"
+                }`}
+              >
+                {submitting ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : profile?.round2_status === 'submitted' || success ? (
+                  <>
+                    <CheckCircle2 size={16} />
+                    <span>Submission Sync Complete</span>
+                  </>
+                ) : !isProtocolComplete ? (
+                  <>
+                    <Lock size={14} />
+                    <span>Protocol Incomplete</span>
+                  </>
+                ) : (
+                  <>
+                    <Send size={16} />
+                    <span>Execute Final Commit</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
@@ -228,68 +299,6 @@ export default function ResearchPage() {
             )}
           </AnimatePresence>
         </div>
-
-        <aside className="space-y-6">
-          <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-8 rounded-[32px] space-y-8">
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="text-[#2563EB]" size={20} />
-              <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#0F172A]">Rules of Engagement</h4>
-            </div>
-            
-            <ul className="space-y-6">
-              {[
-                { icon: Copy, text: "Paste restriction: Max 100 chars per action." },
-                { icon: Zap, text: "Minimum requirement: 10,000 characters." },
-                { icon: Clock, text: "Auto-save disabled. Commit when finished." },
-                { icon: BookOpen, text: "Deep synthesis and citations required." }
-              ].map((rule, i) => (
-                <li key={i} className="flex items-start gap-4">
-                  <div className="w-8 h-8 bg-white border border-[#E2E8F0] rounded-xl flex items-center justify-center text-[#94A3B8] shadow-sm">
-                    <rule.icon size={14} />
-                  </div>
-                  <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wide leading-tight mt-1">{rule.text}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="pt-6 border-t border-[#E2E8F0]">
-              <button
-                onClick={handleSubmit}
-                disabled={submitting || profile.round2_status === 'submitted' || success}
-                className={`w-full py-5 rounded-2xl font-black text-xs tracking-widest uppercase transition-all flex items-center justify-center gap-3 shadow-lg active:scale-95 ${
-                  profile.round2_status === 'submitted' || success
-                  ? "bg-emerald-500 text-white cursor-not-allowed"
-                  : "bg-[#2563EB] text-white hover:bg-blue-600 shadow-blue-200"
-                }`}
-              >
-                {submitting ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : profile.round2_status === 'submitted' || success ? (
-                  <>
-                    <CheckCircle2 size={16} />
-                    <span>Submitted</span>
-                  </>
-                ) : (
-                  <>
-                    <Send size={16} />
-                    <span>Execute Commit</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          <div className="p-8 bg-white border border-[#E2E8F0] rounded-[32px] shadow-sm">
-             <h5 className="text-[9px] font-black text-[#94A3B8] uppercase tracking-widest mb-4">Integrity Monitor</h5>
-             <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-black text-[#0F172A] uppercase">Accuracy</span>
-                <span className="text-[10px] font-bold text-[#2563EB]">98.2%</span>
-             </div>
-             <div className="h-1.5 bg-[#F8FAFC] rounded-full overflow-hidden">
-                <div className="h-full bg-[#2563EB] w-[98.2%]" />
-             </div>
-          </div>
-        </aside>
       </main>
     </div>
   );

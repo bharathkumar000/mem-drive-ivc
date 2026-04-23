@@ -397,35 +397,51 @@ export default function CandidatePlayPage() {
                        const optionText = currentQuestion?.options?.[idx] || labels[idx];
                        
                        return (
-                         <motion.button
-                           key={idx}
-                           initial={{ opacity: 0, scale: 0.95 }}
-                           animate={{ opacity: 1, scale: 1 }}
-                           whileTap={{ scale: 0.97 }}
-                           
-                           onClick={() => handleSelect(idx)}
-                           className={`relative rounded-[28px] md:rounded-[32px] flex flex-col items-center justify-center text-white transition-all overflow-hidden p-6 text-center group/opt cursor-pointer touch-manipulation z-40 ${
-                             selectedOption === idx ? 'ring-4 ring-white/50 shadow-2xl scale-[1.02]' : 
-                             selectedOption !== null ? 'opacity-80 hover:opacity-100 grayscale-[0.2] hover:grayscale-0' : 'hover:scale-[1.02]'
-                           } ${colors[idx]} shadow-lg`}
-                         >
-                            <div className="relative z-10 flex flex-col items-center gap-3 pointer-events-none">
-                               <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-lg md:text-xl font-black mb-1 border border-white/30">
-                                  {labels[idx]}
-                               </div>
-                               <span className="text-sm md:text-base lg:text-lg font-black tracking-tight leading-tight max-w-[200px]">
-                                 {optionText}
-                               </span>
-                            </div>
-                            
-                            {selectedOption === idx && (
+                          <motion.button
+                            key={idx}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ 
+                              opacity: selectedOption === null || selectedOption === idx ? 1 : 0.4,
+                              scale: selectedOption === idx ? 1.05 : 1,
+                              filter: selectedOption !== null && selectedOption !== idx ? 'grayscale(0.8)' : 'grayscale(0)'
+                            }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => handleSelect(idx)}
+                            className={`relative rounded-[32px] flex flex-col items-center justify-center text-white transition-all overflow-hidden p-6 text-center group/opt cursor-pointer touch-manipulation z-40 ${
+                              selectedOption === idx 
+                                ? 'ring-[6px] ring-white shadow-[0_0_40px_rgba(255,255,255,0.3)] z-50' 
+                                : 'shadow-lg'
+                            } ${colors[idx]}`}
+                          >
+                             {/* Selection Pulse */}
+                             {selectedOption === idx && (
                                <motion.div 
-                                 initial={{ scale: 0 }}
-                                 animate={{ scale: 1.5 }}
-                                 className="absolute inset-0 bg-white/10 rounded-full"
+                                 animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }}
+                                 transition={{ repeat: Infinity, duration: 2 }}
+                                 className="absolute inset-0 bg-white rounded-full"
                                />
-                            )}
-                         </motion.button>
+                             )}
+
+                             <div className="relative z-10 flex flex-col items-center gap-3 pointer-events-none">
+                                <div className="flex items-center justify-center gap-3">
+                                   <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-lg md:text-xl font-black border border-white/30">
+                                      {labels[idx]}
+                                   </div>
+                                   {selectedOption === idx && (
+                                      <motion.div
+                                        initial={{ scale: 0, rotate: -20 }}
+                                        animate={{ scale: 1, rotate: 0 }}
+                                        className="w-10 h-10 bg-white text-[#0F172A] rounded-full flex items-center justify-center shadow-lg"
+                                      >
+                                         <CircleCheck size={24} fill="currentColor" className="text-white" />
+                                      </motion.div>
+                                   )}
+                                </div>
+                                <span className="text-sm md:text-base lg:text-lg font-black tracking-tight leading-tight max-w-[200px]">
+                                  {optionText}
+                                </span>
+                             </div>
+                          </motion.button>
                        );
                      })}
                       {selectedOption !== null && !isLocked && (
