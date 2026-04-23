@@ -17,7 +17,11 @@ import {
   BarChart2,
   Medal,
   Award,
-  ArrowLeft
+  ArrowLeft,
+  ShieldAlert,
+  AlertTriangle,
+  MonitorOff,
+  XCircle
 } from "lucide-react";
 
 export default function AdminHostPage() {
@@ -39,6 +43,9 @@ export default function AdminHostPage() {
   const [showOptions, setShowOptions] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const timerRef = useRef(null);
+  const channelRef = useRef(null);
+  const [activeRegistryTab, setActiveRegistryTab] = useState('leaderboard');
+  const [violations, setViolations] = useState([]);
 
   useEffect(() => {
     if (status === 'showing-question') {
@@ -66,7 +73,6 @@ export default function AdminHostPage() {
       setQuiz(quizData);
       quizRef.current = quizData;
       
-      // If quiz is already finished when admin enters, reset it to lobby for a fresh start
       if (quizData.status === 'finished') {
         await supabase.from("quizzes").update({ status: 'lobby', current_question_index: 0 }).eq("id", quizData.id);
         setStatus('lobby');
@@ -105,7 +111,29 @@ export default function AdminHostPage() {
           const users = Object.entries(usersMap).map(([id, full_name]) => ({ id, full_name }));
           setPresentUsers(users);
           if (quizData?.id) fetchLeaderboard(quizData.id, users);
+        })
+        .on('broadcast', { event: 'violation_detected' }, (payload) => {
+          setViolations(prev => {
+             const newViolation = payload.payload;
+             const exists = prev.find(v => v.userId === newViolation.userId);
+             if (exists) {
+                return prev.map(v => v.userId === newViolation.userId ? { ...v, count: newViolation.count, type: newViolation.type, lastSeen: new Date().toISOString() } : v);
+             }
+             return [...prev, { ...newViolation, status: 'warning', lastSeen: new Date().toISOString() }];
+          });
+        })
+        .on('broadcast', { event: 'session_terminated' }, (payload) => {
+           setViolations(prev => {
+              const terminatedUser = payload.payload;
+              const exists = prev.find(v => v.userId === terminatedUser.userId);
+              if (exists) {
+                 return prev.map(v => v.userId === terminatedUser.userId ? { ...v, status: 'terminated', lastSeen: new Date().toISOString() } : v);
+              }
+              return [...prev, { ...terminatedUser, status: 'terminated', lastSeen: new Date().toISOString(), type: 'MAX_VIOLATIONS_REACHED' }];
+           });
         });
+
+      channelRef.current = channel;
 
       channel.subscribe((status) => {
         if (status === 'SUBSCRIBED') {
@@ -113,7 +141,6 @@ export default function AdminHostPage() {
         }
       });
 
-      // HEARTBEAT SYNC: Every 10s broadcast state to ensure mobile nodes catch up
       const heartbeat = setInterval(() => {
         if (quizRef.current) {
           channel.send({
@@ -125,7 +152,10 @@ export default function AdminHostPage() {
       }, 10000);
 
       return () => {
-        supabase.removeChannel(channel);
+        if (channelRef.current) {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        }
         clearInterval(heartbeat);
         clearInterval(timerRef.current);
       };
@@ -134,13 +164,11 @@ export default function AdminHostPage() {
   }, [code]);
 
   async function fetchLeaderboard(quizId, currentPresentUsers = null) {
-    // Fetch all submissions for scores
     const { data, error } = await supabase
       .from("submissions")
       .select("user_id, points, profiles!user_id(full_name)")
       .eq("quiz_id", quizId);
 
-    // Fetch profiles for all present users (even if no submissions yet)
     const presentIds = (currentPresentUsers || presentUsers).map(u => u.id).filter(id => !id.startsWith('guest-'));
     let profilesData = [];
     if (presentIds.length > 0) {
@@ -174,8 +202,6 @@ export default function AdminHostPage() {
       const pres = usersToMerge.find(u => u.id === uid);
       const subProfile = data?.find(s => s.user_id === uid)?.profiles;
       const directProfile = profilesData.find(p => p.id === uid);
-      
-      // Prioritize: Database Profile > Presence Name > Guest/Node ID
       const fullName = directProfile?.full_name || subProfile?.full_name || pres?.full_name || `Node-${uid.toString().substring(0, 5)}`;
       
       return {
@@ -202,7 +228,6 @@ export default function AdminHostPage() {
     
     await supabase.from("quizzes").update(payload).eq("id", quiz.id);
     
-    // BROADCAST PULSE: Instant sync for all nodes
     const channel = supabase.channel(`quiz_session_${code.toUpperCase()}`);
     await channel.send({
       type: 'broadcast',
@@ -217,7 +242,6 @@ export default function AdminHostPage() {
     });
     setStatus(newStatus);
     
-    // Refresh leaderboard to catch present users
     if (quiz?.id) fetchLeaderboard(quiz.id);
   };
 
@@ -238,7 +262,6 @@ export default function AdminHostPage() {
   };
 
   const resetQuiz = async () => {
-    // Hard reset: Clear database and return to lobby
     if (!quiz?.id) return;
     await supabase.from("submissions").delete().eq("quiz_id", quiz.id);
     setLeaderboard([]);
@@ -249,7 +272,6 @@ export default function AdminHostPage() {
     if (!quiz?.id) return;
     setRefreshing(true);
     
-    // Re-fetch quiz data
     const { data: quizData } = await supabase
       .from("quizzes")
       .select("*, questions(*)")
@@ -259,8 +281,23 @@ export default function AdminHostPage() {
     if (quizData) {
       setQuiz(quizData);
       quizRef.current = quizData;
-      // Refresh leaderboard & presence nodes
-      await fetchLeaderboard(quizData.id);
+      
+      if (channelRef.current) {
+        const state = channelRef.current.presenceState();
+        const usersMap = {};
+        Object.entries(state).forEach(([key, presences]) => {
+          presences.forEach(p => {
+            const userId = p.user_id || p.userId || p.id || key;
+            const fullName = p.full_name || p.fullName || p.name || p.userName || `Node-${userId.toString().substring(0, 5)}`;
+            if (userId) usersMap[userId] = fullName;
+          });
+        });
+        const users = Object.entries(usersMap).map(([id, full_name]) => ({ id, full_name }));
+        setPresentUsers(users);
+        await fetchLeaderboard(quizData.id, users);
+      } else {
+        await fetchLeaderboard(quizData.id);
+      }
     }
     
     setTimeout(() => setRefreshing(false), 1000);
@@ -268,7 +305,6 @@ export default function AdminHostPage() {
 
   const startQuiz = async () => {
     if (!quiz?.id) return;
-    // Clear any existing scores/submissions for a fresh start
     await supabase.from("submissions").delete().eq("quiz_id", quiz.id);
     setLeaderboard([]);
     
@@ -322,20 +358,17 @@ export default function AdminHostPage() {
 
   return (
     <div className="h-screen bg-[#020617] text-white flex flex-col lg:flex-row font-sans overflow-hidden selection:bg-primary-blue/30 relative">
-       {/* Background Ambient Glows */}
        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary-blue/10 rounded-full blur-[120px]" />
           <div className="absolute top-[20%] -right-[10%] w-[30%] h-[30%] bg-primary-blue/5 rounded-full blur-[100px]" />
        </div>
 
-       {/* Main Display (TV AREA) */}
        <div className="flex-1 flex flex-col p-6 md:p-12 relative overflow-hidden z-10">
           <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 w-full">
-             <div className="flex items-center gap-5">
+             <div className="flex items-center gap-4">
                 <button 
                   onClick={() => router.push('/quiz/admin')}
                   className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all group mr-2"
-                  title="Exit to Command Center"
                 >
                   <ArrowLeft className="w-5 h-5 text-white/60 group-hover:text-white transition-colors" />
                 </button>
@@ -347,7 +380,7 @@ export default function AdminHostPage() {
                       <div className="w-2 h-2 rounded-full bg-primary-blue animate-pulse" />
                       <h2 className="text-xs font-black uppercase tracking-[0.4em] text-white/40 leading-none">Command Terminal</h2>
                    </div>
-                   <h1 className="text-3xl font-black uppercase tracking-tighter leading-none grad-text">{quiz.title}</h1>
+                   <h1 className="text-3xl font-black uppercase tracking-tighter leading-none">{quiz.title}</h1>
                 </div>
              </div>
 
@@ -363,7 +396,7 @@ export default function AdminHostPage() {
               </div>
           </header>
 
-          <main className="flex-1 flex flex-col items-center justify-center max-w-4xl mx-auto w-full relative">
+          <main className="flex-1 flex flex-col items-center justify-center max-w-3xl mx-auto w-full relative">
              <AnimatePresence mode="wait">
                 {status === 'lobby' && (
                   <motion.div
@@ -386,22 +419,6 @@ export default function AdminHostPage() {
                         </div>
                      </div>
 
-                     <div className="flex flex-wrap justify-center gap-2.5 w-full min-h-[100px] content-center">
-                        {/* Node individual chips removed per request */}
-                        {presentUsers.length === 0 && (
-                          <div className="flex flex-col items-center gap-3 opacity-10">
-                             <div className="w-10 h-0.5 bg-white/20 rounded-full overflow-hidden">
-                                <motion.div 
-                                  animate={{ x: [-30, 30] }} 
-                                  transition={{ duration: 2, repeat: Infinity }}
-                                  className="w-3 h-full bg-white" 
-                                />
-                             </div>
-                             <p className="text-[8px] font-black uppercase tracking-[0.5em]">AWAITING LINK</p>
-                          </div>
-                        )}
-                     </div>
-
                      <button 
                        onClick={startQuiz}
                        className="bg-primary-blue hover:bg-blue-600 px-10 py-5 rounded-[22px] text-xs font-black uppercase tracking-[0.4em] transition-all flex items-center gap-3 group shadow-xl hover:scale-[1.02] active:scale-95 text-white"
@@ -418,57 +435,62 @@ export default function AdminHostPage() {
                      initial={{ opacity: 0, y: 20 }}
                      animate={{ opacity: 1, y: 0 }}
                      exit={{ opacity: 0, x: -50 }}
-                     className="space-y-10"
+                     className="w-full space-y-8"
                    >
-                      <div className="bg-white/5 border border-white/10 p-12 rounded-[56px] backdrop-blur-3xl overflow-hidden relative group shadow-2xl">
-                         <div className="absolute top-0 right-0 p-8">
-                            <div className="w-32 h-32 rounded-full border-4 border-white/5 flex flex-col items-center justify-center relative bg-black/20">
-                               <span className="text-[10px] font-black text-white/30 mb-1 tracking-widest">TIME</span>
-                               <span className="text-5xl font-black tabular-nums">{timer}</span>
-                               <svg className="absolute inset-0 w-full h-full -rotate-90">
-                                  <circle 
-                                    cx="64" cy="64" r="60" 
-                                    className="stroke-primary-blue/20 fill-none" 
-                                    strokeWidth="4" 
-                                  />
-                                  <motion.circle 
-                                    cx="64" cy="64" r="60" 
-                                    className="stroke-primary-blue fill-none" 
-                                    strokeWidth="4" 
-                                    strokeDasharray="377"
-                                    initial={{ strokeDashoffset: 0 }}
-                                    animate={{ strokeDashoffset: 377 - (377 * (timer / (currentQuestion.time_limit || 30))) }}
-                                  />
-                               </svg>
+                      <div className="bg-white/5 border border-white/10 p-10 md:p-12 rounded-[48px] backdrop-blur-3xl overflow-hidden relative shadow-2xl">
+                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+                            <div className="flex items-center gap-4">
+                               <span className="bg-blue-500/20 text-blue-400 px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] border border-blue-500/20">Module 0{quiz.current_question_index + 1}</span>
+                               <div className="h-px w-8 bg-white/10" />
+                            </div>
+                            
+                            <div className="flex items-center gap-5 bg-black/20 px-6 py-3 rounded-3xl border border-white/5">
+                               <div className="text-right">
+                                  <p className="text-[8px] font-black text-white/30 uppercase tracking-widest mb-0.5">Time Remaining</p>
+                                  <p className="text-2xl font-black tabular-nums tracking-tighter leading-none">{timer}</p>
+                               </div>
+                               <div className="w-10 h-10 rounded-full border-2 border-white/5 flex items-center justify-center relative">
+                                  <svg className="absolute inset-0 w-full h-full -rotate-90">
+                                     <circle 
+                                       cx="20" cy="20" r="18" 
+                                       className="stroke-blue-500/10 fill-none" 
+                                       strokeWidth="3" 
+                                     />
+                                     <motion.circle 
+                                       cx="20" cy="20" r="18" 
+                                       className="stroke-blue-500 fill-none" 
+                                       strokeWidth="3" 
+                                       strokeDasharray="113.1"
+                                       initial={{ strokeDashoffset: 0 }}
+                                       animate={{ strokeDashoffset: 113.1 - (113.1 * (timer / (currentQuestion.time_limit || 30))) }}
+                                     />
+                                  </svg>
+                                  <Clock className="w-4 h-4 text-blue-400 opacity-40" />
+                               </div>
                             </div>
                          </div>
-                         <div className="relative z-10 space-y-6 max-w-[75%]">
-                            <div className="flex items-center gap-3">
-                               <span className="bg-primary-blue/20 text-primary-blue px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.3em]">Module 0{quiz.current_question_index + 1}</span>
-                               <div className="h-px w-10 bg-white/10" />
-                            </div>
-                            <h2 className="text-5xl font-black leading-[1.1] tracking-tight uppercase">{currentQuestion.content || currentQuestion.question_text}</h2>
+
+                         <div className="relative z-10">
+                            <h2 className="text-3xl md:text-4xl font-black leading-tight tracking-tight uppercase max-w-2xl">{currentQuestion.content || currentQuestion.question_text}</h2>
                          </div>
                       </div>
 
                       {showOptions ? (
-                        <div className="grid grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                            {currentQuestion.options?.map((opt, idx) => {
-                               const colors = ['border-blue-500/30', 'border-red-500/30', 'border-amber-500/30', 'border-emerald-500/30'];
-                               const bgColors = ['bg-blue-500', 'bg-red-500', 'bg-amber-500', 'bg-emerald-500'];
+                               const bgColors = ['bg-blue-600', 'bg-red-600', 'bg-amber-600', 'bg-emerald-600'];
                                const labels = ['A', 'B', 'C', 'D'];
                                return (
                                   <motion.div 
                                     key={idx}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0, transition: { delay: idx * 0.1 } }}
-                                    className={`flex items-center gap-8 p-8 bg-white/5 border ${colors[idx]} rounded-[40px] shadow-xl group relative overflow-hidden`}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1, transition: { delay: idx * 0.1 } }}
+                                    className="flex items-center gap-6 p-6 bg-white/5 border border-white/10 rounded-[32px] shadow-xl relative overflow-hidden"
                                   >
-                                     <div className={`${bgColors[idx]} w-16 h-16 rounded-[24px] flex items-center justify-center font-black text-2xl shadow-2xl relative z-10`}>
+                                     <div className={`${bgColors[idx]} w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl shadow-lg relative z-10 text-white`}>
                                         {labels[idx]}
                                      </div>
-                                     <span className="text-2xl font-bold tracking-tight text-white/70 relative z-10">{opt}</span>
-                                     <div className={`absolute inset-0 ${bgColors[idx]} opacity-0 group-hover:opacity-[0.03] transition-opacity`} />
+                                     <span className="text-lg md:text-xl font-bold tracking-tight text-white/80 relative z-10">{opt}</span>
                                   </motion.div>
                                )
                            })}
@@ -479,7 +501,6 @@ export default function AdminHostPage() {
                               <Zap className="animate-bounce" />
                               <span>BROADCAST SYNC IN PROGRESS</span>
                            </div>
-                           <p className="text-white/20 text-xs font-black uppercase tracking-[0.3em]">Auditing Node Intelligence. Data streams opening in 3s...</p>
                         </div>
                       )}
                    </motion.div>
@@ -493,10 +514,9 @@ export default function AdminHostPage() {
                      className="space-y-12 text-center py-20"
                    >
                       <div className="space-y-6">
-                         <div className="w-28 h-28 bg-emerald-500/10 rounded-[44px] border border-emerald-500/20 flex items-center justify-center mx-auto mb-4 shadow-3xl shadow-emerald-500/10">
+                         <div className="w-28 h-28 bg-emerald-500/10 rounded-[44px] border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
                             <CircleCheck className="text-emerald-500 w-14 h-14" />
                          </div>
-                         <h1 className="text-xs font-black uppercase tracking-[0.6em] text-white/30">Verified Dataset Signature</h1>
                          <h2 className="text-7xl font-black leading-tight tracking-tight uppercase text-emerald-400 max-w-4xl mx-auto">
                             {currentQuestion.options?.[['A','B','C','D'].indexOf(currentQuestion.correct_answer)] || currentQuestion.correct_answer}
                          </h2>
@@ -520,30 +540,20 @@ export default function AdminHostPage() {
                      className="space-y-16 text-center"
                    >
                       <div className="space-y-8">
-                         <div className="relative w-fit mx-auto">
-                            <Trophy size={180} className="text-amber-400 drop-shadow-[0_0_50px_rgba(251,191,36,0.5)]" />
-                            <motion.div 
-                               animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                               transition={{ duration: 3, repeat: Infinity }}
-                               className="absolute inset-0 bg-amber-400/20 blur-[100px] rounded-full" 
-                            />
-                         </div>
-                         <div className="space-y-4">
-                            <h1 className="text-8xl font-black tracking-[0.1em] uppercase leading-none">ELITE NODE ESTABLISHED</h1>
-                            <p className="text-sm font-black text-white/30 uppercase tracking-[0.6em]">Protocol sequence terminated successfully</p>
-                         </div>
+                         <Trophy size={180} className="text-amber-400 mx-auto" />
+                         <h1 className="text-8xl font-black tracking-[0.1em] uppercase leading-none">ELITE NODE ESTABLISHED</h1>
                       </div>
 
                       <div className="flex gap-6 justify-center">
                          <button 
                            onClick={() => setStatus('lobby')}
-                           className="bg-white/5 hover:bg-white/10 border border-white/10 px-10 py-6 rounded-[28px] font-black text-[13px] uppercase tracking-[0.3em] transition-all backdrop-blur-md"
+                           className="bg-white/5 border border-white/10 px-10 py-6 rounded-[28px] font-black text-[13px] uppercase tracking-[0.3em] transition-all backdrop-blur-md"
                          >
                            Reset Node
                          </button>
                          <button 
                            onClick={() => router.push('/quiz/admin/quizzes')}
-                           className="bg-primary-blue hover:bg-blue-600 px-16 py-6 rounded-[28px] font-black text-[13px] uppercase tracking-[0.3em] transition-all shadow-2xl"
+                           className="bg-primary-blue px-16 py-6 rounded-[28px] font-black text-[13px] uppercase tracking-[0.3em] transition-all"
                          >
                            Finalize Matrix
                          </button>
@@ -552,104 +562,165 @@ export default function AdminHostPage() {
                 )}
              </AnimatePresence>
           </main>
-
-          <footer className="mt-auto pt-8 flex justify-between items-center opacity-30 px-2">
-             <div className="text-[9px] font-black uppercase tracking-[0.5em]">Skill Forge • Neural Mesh v4.28</div>
-             <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2.5">
-                   <div className="w-1 h-1 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,1)]" />
-                   <span className="text-[9px] font-black tracking-[0.3em]">STRENGTH: 98%</span>
-                </div>
-             </div>
-          </footer>
        </div>
 
         {/* Global Registry Sidebar */}
         <div className="w-full lg:w-[420px] bg-[#020617] lg:bg-white text-white lg:text-[#0F172A] flex flex-col p-8 md:p-10 overflow-hidden relative border-l border-white/5 lg:border-gray-100">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-blue/5 rounded-full blur-[100px] pointer-events-none" />
-          
-          <div className="relative z-10 mb-6 md:mb-10">
-             <div className="flex items-center gap-4 mb-4 md:mb-5">
+          <div className="relative z-10 mb-6 md:mb-8">
+             <div className="flex items-center gap-4 mb-8">
                 <div className="p-2 bg-primary-blue/10 lg:bg-blue-50 rounded-[14px]">
                    <Medal className="text-primary-blue w-4 h-4" />
                 </div>
                 <h3 className="text-lg font-black uppercase tracking-tighter">Elite Registry</h3>
              </div>
+             
+             <div className="flex p-1.5 bg-white/5 lg:bg-slate-100 rounded-[24px] mb-8 gap-1.5">
+                <button 
+                   onClick={() => setActiveRegistryTab('leaderboard')}
+                   className={`flex-1 py-3 px-4 rounded-[18px] text-[9px] font-black uppercase tracking-widest transition-all ${
+                     activeRegistryTab === 'leaderboard' 
+                     ? 'bg-[#0F172A] lg:bg-white text-white lg:text-[#0F172A] shadow-lg' 
+                     : 'text-white/40 lg:text-slate-400 hover:text-white lg:hover:text-[#0F172A]'
+                   }`}
+                >
+                   Leaderboard
+                </button>
+                <button 
+                   onClick={() => setActiveRegistryTab('violations')}
+                   className={`flex-1 py-3 px-4 rounded-[18px] text-[9px] font-black uppercase tracking-widest transition-all relative ${
+                     activeRegistryTab === 'violations' 
+                     ? 'bg-[#0F172A] lg:bg-white text-white lg:text-[#0F172A] shadow-lg' 
+                     : 'text-white/40 lg:text-slate-400 hover:text-white lg:hover:text-[#0F172A]'
+                   }`}
+                >
+                   Threat Intel
+                   {violations.length > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[8px] flex items-center justify-center rounded-full animate-pulse border-2 border-white lg:border-slate-100">
+                         {violations.length}
+                      </span>
+                   )}
+                </button>
+             </div>
+
              <div className="flex justify-between items-end mb-2">
-                <p className="text-[9px] font-black text-[#94A3B8] uppercase tracking-[0.3em] leading-none">Global Ranking Matrix</p>
-                <span className="text-[8px] font-black uppercase text-primary-blue opacity-50">{leaderboard.length} LOGS</span>
+                <p className="text-[9px] font-black text-[#94A3B8] uppercase tracking-[0.3em] leading-none">
+                  {activeRegistryTab === 'leaderboard' ? 'Global Ranking Matrix' : 'Integrity Breach Logs'}
+                </p>
+                <span className="text-[8px] font-black uppercase text-primary-blue opacity-50">
+                   {activeRegistryTab === 'leaderboard' ? leaderboard.length : violations.length} RECORDS
+                </span>
              </div>
              <div className="w-full h-1 bg-white/5 lg:bg-gray-100 flex overflow-hidden rounded-full">
                 <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: '40%' }}
-                  className="h-full bg-primary-blue" 
+                   initial={{ width: 0 }}
+                   animate={{ width: activeRegistryTab === 'leaderboard' ? '40%' : '100%' }}
+                   className={`h-full ${activeRegistryTab === 'leaderboard' ? 'bg-primary-blue' : 'bg-rose-500'}`} 
                 />
              </div>
           </div>
 
           <div className="flex-1 space-y-3.5 overflow-y-auto pr-1 custom-scrollbar-hide relative z-10 py-1">
-             <AnimatePresence mode="popLayout">
-                {leaderboard.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-10 py-20">
-                     <Users size={48} strokeWidth={1} />
-                     <p className="text-[8px] font-black uppercase tracking-[0.4em] text-center">Awaiting Node Connections</p>
-                  </div>
-                ) : leaderboard.map((player, index) => (
-                   <motion.div
-                     key={player.id}
-                     layout
-                     initial={{ opacity: 0, x: 30 }}
+             <AnimatePresence mode="wait">
+                {activeRegistryTab === 'leaderboard' ? (
+                   <motion.div 
+                     key="leaderboard-tab"
+                     initial={{ opacity: 0, x: 20 }}
                      animate={{ opacity: 1, x: 0 }}
-                     className={`flex items-center justify-between p-4 rounded-[20px] border ${
-                       index === 0 ? 'bg-[#0F172A] lg:bg-[#0F172A] text-white border-[#0F172A] shadow-2xl scale-[1.01] ring-4 ring-primary-blue/10' : 
-                       'bg-white/5 lg:bg-white border-white/5 lg:border-[#F1F5F9]'
-                     } transition-all relative overflow-hidden`}
+                     exit={{ opacity: 0, x: -20 }}
+                     className="space-y-3.5"
                    >
-                      {index === 0 && (
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-primary-blue/10 rounded-full translate-x-10 -translate-y-10 blur-2xl" />
-                      )}
-                      
-                      <div className="flex items-center gap-5 relative z-10">
-                         <div className={`w-8 h-8 rounded-[12px] flex items-center justify-center font-black text-sm ${
-                           index === 0 ? 'bg-amber-400 text-[#0F172A]' : 
-                           index === 1 ? 'bg-slate-500/10 text-slate-500' : 
-                           index === 2 ? 'bg-orange-500/10 text-orange-600' : 
-                           'bg-gray-500/5 text-gray-400'
-                         }`}>
-                           {index + 1}
-                         </div>
-                         <div className="flex flex-col">
-                            <span className="text-sm font-black uppercase tracking-tight truncate max-w-[160px]">
-                              {player.full_name}
-                            </span>
-                            <div className="flex items-center gap-2 mt-1">
-                               <div className={`w-1 h-1 rounded-full ${index === 0 ? 'bg-emerald-400' : 'bg-primary-blue'}`} />
-                               <span className={`text-[9px] font-black uppercase tracking-widest opacity-40 ${index === 0 ? 'text-blue-200' : ''}`}>Verified</span>
+                      {leaderboard.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-10 py-20">
+                           <Users size={48} strokeWidth={1} />
+                           <p className="text-[8px] font-black uppercase tracking-[0.4em] text-center">Awaiting Node Connections</p>
+                        </div>
+                      ) : leaderboard.map((player, index) => (
+                         <motion.div
+                           key={player.id}
+                           layout
+                           initial={{ opacity: 0, x: 30 }}
+                           animate={{ opacity: 1, x: 0 }}
+                           className={`flex items-center justify-between p-4 rounded-[20px] border ${
+                             index === 0 ? 'bg-[#0F172A] text-white border-[#0F172A] shadow-2xl scale-[1.01] ring-4 ring-primary-blue/10' : 
+                             'bg-white/5 lg:bg-white border-white/5 lg:border-[#F1F5F9]'
+                           } transition-all relative overflow-hidden`}
+                         >
+                            <div className="flex items-center gap-5 relative z-10">
+                               <div className={`w-8 h-8 rounded-[12px] flex items-center justify-center font-black text-sm ${
+                                 index === 0 ? 'bg-amber-400 text-[#0F172A]' : 'bg-gray-500/5 text-gray-400'
+                               }`}>
+                                 {index + 1}
+                               </div>
+                               <div className="flex flex-col">
+                                  <span className="text-sm font-black uppercase tracking-tight truncate max-w-[160px]">
+                                    {player.full_name}
+                                  </span>
+                                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Verified</span>
+                               </div>
                             </div>
-                         </div>
-                      </div>
-                      <div className="text-right relative z-10">
-                         <span className={`text-lg font-black tabular-nums ${index === 0 ? 'text-amber-400' : 'text-primary-blue lg:text-[#0F172A]'}`}>
-                           {player.total_score || player.points || 0}
-                         </span>
-                         <p className="text-[9px] font-black uppercase opacity-30 mt-1">PTS</p>
-                      </div>
+                            <div className="text-right relative z-10">
+                               <span className={`text-lg font-black tabular-nums ${index === 0 ? 'text-amber-400' : 'text-[#0F172A]'}`}>
+                                 {player.total_score || 0}
+                               </span>
+                               <p className="text-[9px] font-black uppercase opacity-30 mt-1">PTS</p>
+                            </div>
+                         </motion.div>
+                      ))}
                    </motion.div>
-                ))}
+                ) : (
+                   <motion.div 
+                     key="violations-tab"
+                     initial={{ opacity: 0, x: 20 }}
+                     animate={{ opacity: 1, x: 0 }}
+                     exit={{ opacity: 0, x: -20 }}
+                     className="space-y-3.5"
+                   >
+                      {violations.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-10 py-20">
+                           <ShieldAlert size={48} strokeWidth={1} />
+                           <p className="text-[8px] font-black uppercase tracking-[0.4em] text-center">No Protocol Breaches Detected</p>
+                        </div>
+                      ) : violations.map((v, index) => (
+                         <motion.div
+                           key={v.userId}
+                           initial={{ opacity: 0, y: 10 }}
+                           animate={{ opacity: 1, y: 0 }}
+                           className={`flex items-center justify-between p-4 rounded-[20px] transition-all ${
+                              v.status === 'terminated' ? 'bg-rose-500/10 border-rose-500/30' : 'bg-amber-500/5 border-amber-500/20'
+                           } border`}
+                         >
+                            <div className="flex items-center gap-4">
+                               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${v.status === 'terminated' ? 'bg-rose-600 text-white' : 'bg-amber-100 text-amber-600'}`}>
+                                  {v.status === 'terminated' ? <MonitorOff size={18} /> : <AlertTriangle size={18} />}
+                               </div>
+                               <div className="flex flex-col">
+                                  <span className={`text-sm font-black uppercase tracking-tight ${v.status === 'terminated' ? 'text-rose-500' : 'text-[#0F172A]'}`}>{v.userName}</span>
+                                  <span className={`text-[8px] font-black uppercase tracking-widest mt-1 ${v.status === 'terminated' ? 'text-rose-500/60' : 'text-amber-600/60'}`}>
+                                     {v.status === 'terminated' ? 'NODE_TERMINATED' : `${v.count} BREACHES`}
+                                  </span>
+                               </div>
+                            </div>
+                            <div className="text-right">
+                               <div className="text-[8px] font-black text-[#94A3B8] uppercase tracking-widest">Breach</div>
+                               <div className="text-[9px] font-black text-[#0F172A] uppercase truncate max-w-[100px]">{v.type?.split(' ')[0]}...</div>
+                            </div>
+                         </motion.div>
+                      ))}
+                   </motion.div>
+                )}
              </AnimatePresence>
           </div>
 
-            <div className="mt-8">
-                <button 
-                  onClick={recalibrateNode}
-                  disabled={refreshing}
-                  className="w-full py-3 bg-white/5 lg:bg-slate-50 border border-white/5 lg:border-slate-100 rounded-[20px] text-[8px] font-black uppercase tracking-[0.4em] text-white/30 lg:text-slate-400 hover:text-primary-blue lg:hover:text-primary-blue hover:bg-white/10 lg:hover:bg-blue-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50"
-                >
-                  <Zap size={10} className={`fill-current ${refreshing ? "animate-bounce" : ""}`} />
-                  <span>{refreshing ? "Synchronizing Matrix..." : "Recalibrate Neural Node"}</span>
-                </button>
-           </div>
+          <div className="mt-8">
+              <button 
+                onClick={recalibrateNode}
+                disabled={refreshing}
+                className="w-full py-3 bg-slate-50 border border-slate-100 rounded-[20px] text-[8px] font-black uppercase tracking-[0.4em] text-slate-400 hover:text-primary-blue hover:bg-blue-50 transition-all flex items-center justify-center gap-3"
+              >
+                <Zap size={10} className={`${refreshing ? "animate-bounce" : ""}`} />
+                <span>{refreshing ? "Synchronizing Matrix..." : "Recalibrate Neural Node"}</span>
+              </button>
+          </div>
         </div>
     </div>
   );
