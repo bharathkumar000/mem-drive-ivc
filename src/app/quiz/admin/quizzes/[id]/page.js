@@ -120,12 +120,13 @@ export default function QuizConfigurePage({ params }) {
     setLeaderboardLoading(true);
     try {
       // Fetch all submissions with profile data
-      const { data: subs } = await supabase
+      const { data: subs, error } = await supabase
         .from("submissions")
         .select("*, profiles!user_id(full_name, email)")
         .eq("quiz_id", quizId)
-        .order("total_score", { ascending: false })
         .order("time_taken", { ascending: true });
+        
+      if (error) console.error("Supabase Leaderboard fetch error:", error);
 
       // Build leaderboard: aggregate by user_id
       const scoreMap = {};

@@ -201,8 +201,10 @@ export default function CandidatePlayPage() {
   const [showOptions, setShowOptions] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
+   useEffect(() => {
     if (quiz?.status === 'showing-question') {
+      setSelectedOption(null); // Critical: Reset selection for new question
+      setIsSubmitting(false);
       setShowOptions(false);
       const timer = setTimeout(() => {
         setShowOptions(true);
@@ -217,22 +219,19 @@ export default function CandidatePlayPage() {
   const handleSelect = async (optionIndex) => {
     if (quiz?.status !== 'showing-question' || !currentQuestion) return;
     
-    // Instant visual feedback - no more isSubmitting lock here
+    // Optimistic UI Update
     setSelectedOption(optionIndex);
     
     const elapsed = (Date.now() - startTime) / 1000;
-    const answer = String.fromCharCode(65 + optionIndex); // A, B, C, D
+    const answer = String.fromCharCode(65 + optionIndex);
     const isCorrect = answer === currentQuestion.correct_answer;
     
-    // Calculate score with Response-Time Decay logic
     const timeLimit = currentQuestion.time_limit || 15;
     const basePoints = timeLimit * 10;
-    const penalty = Math.floor(elapsed);
-    const pointsEarned = isCorrect ? Math.max(10, basePoints - (penalty * 10)) : 0;
+    const pointsEarned = isCorrect ? Math.max(10, basePoints - (Math.floor(elapsed) * 10)) : 0;
     
-    setIsSubmitting(true);
     try {
-      // 1. Clear any previous submission for this question to allow re-selection
+      // Use UPSERT logic via delete-insert pattern for robustness across all sessions
       await supabase
         .from('submissions')
         .delete()
@@ -242,7 +241,6 @@ export default function CandidatePlayPage() {
           question_id: currentQuestion.id 
         });
 
-      // 2. Save new answer to Supabase
       await supabase.from('submissions').insert([{
         quiz_id: quiz.id,
         user_id: user.id,
@@ -253,9 +251,7 @@ export default function CandidatePlayPage() {
         time_taken: elapsed
       }]);
     } catch (err) {
-      console.error("Failed to save answer:", err);
-    } finally {
-      setIsSubmitting(false);
+      console.error("Selection sync failed:", err);
     }
   };
 
@@ -393,8 +389,8 @@ export default function CandidatePlayPage() {
                            
                            onClick={() => handleSelect(idx)}
                            className={`relative rounded-[28px] md:rounded-[32px] flex flex-col items-center justify-center text-white transition-all overflow-hidden p-6 text-center group/opt cursor-pointer touch-manipulation z-40 ${
-                             selectedOption === idx ? 'ring-4 ring-white/50 shadow-2xl' : 
-                             selectedOption !== null ? 'opacity-60 hover:opacity-100 grayscale-[0.3] hover:grayscale-0' : ''
+                             selectedOption === idx ? 'ring-4 ring-white/50 shadow-2xl scale-[1.02]' : 
+                             selectedOption !== null ? 'opacity-80 hover:opacity-100 grayscale-[0.2] hover:grayscale-0' : 'hover:scale-[1.02]'
                            } ${colors[idx]} shadow-lg`}
                          >
                             <div className="relative z-10 flex flex-col items-center gap-3 pointer-events-none">
