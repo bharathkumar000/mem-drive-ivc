@@ -150,7 +150,7 @@ export default function DashboardPage() {
     { title: "SESSIONS ATTENDED", value: submissions.length, icon: History, color: "text-blue-600" },
     { title: "AVERAGE ACCURACY", value: submissions.length ? `${(submissions.reduce((acc, s) => acc + (s.total_score || 0), 0) / submissions.length / 10 * 100).toFixed(0)}%` : "0%", icon: Target, color: "text-emerald-500" },
     { title: "TOTAL SYNC TIME", value: submissions.length ? `${(submissions.length * 30)}m` : "0m", icon: Clock, color: "text-indigo-600" },
-    { title: "GLOBAL RANKING", value: "#14", icon: Trophy, color: "text-amber-500" },
+    { title: "GLOBAL RANKING", value: "0", icon: Trophy, color: "text-amber-500" },
   ];
 
   if (selectedSession) {
