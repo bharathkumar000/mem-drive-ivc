@@ -15,7 +15,7 @@ import {
   Activity,
   Trophy,
   History,
-  BookOpen
+  BookText
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
@@ -79,7 +79,7 @@ export default function Sidebar() {
   const candidateItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/quiz/access", label: "Protocol", icon: Zap },
-    { href: "/dashboard/research", label: "Secondary Research", icon: BookOpen },
+    { href: "/dashboard/research", label: "Secondary Research", icon: BookText },
   ];
 
   const navItems = isAdmin ? adminItems : candidateItems;

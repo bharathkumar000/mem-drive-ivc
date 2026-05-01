@@ -53,7 +53,20 @@ export default function ResearchPage() {
 
   useEffect(() => {
     async function loadProfile() {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
+      let authUser = user;
+      
+      // Check for mock session if no auth user
+      if (!authUser) {
+        const cookies = document.cookie.split(';');
+        const sessionCookie = cookies.find(c => c.trim().startsWith('mock_session='));
+        if (sessionCookie) {
+          const val = sessionCookie.split('=')[1];
+          const [role, id] = val.split(':');
+          authUser = { id: id || 'demo-user', email: 'demo@skillforge.io' };
+        }
+      }
+
       if (!authUser) {
         router.push("/auth");
         return;
